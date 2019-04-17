@@ -71,11 +71,9 @@ CREATE TABLE IF NOT EXISTS donateurs (
 --table log_utilisateurs
 CREATE TABLE IF NOT EXISTS log_utilisateurs (
     id_log_u serial PRIMARY KEY,
-    id_utilisateur INT NOT NULL,
-    date_action date NOT NULL,
     action_u VARCHAR(255) NOT NULL,
-    categorie VARCHAR(50) NOT NULL,
-    FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
+    date_action date NOT NULL,
+    categorie VARCHAR(50) NOT NULL
 );
 
 --table log_projets
@@ -107,8 +105,8 @@ VALUES (1,1, 'batteur',50);
 INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
 VALUES (1,1, 50,5);
 
-INSERT INTO log_utilisateurs (id_utilisateur, date_action, action_u, categorie) 
-VALUES (1,CURRENT_TIMESTAMP, 'CREATION dun log','CREATION');
+INSERT INTO log_utilisateurs (action_u, date_action, categorie) 
+VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
 
 INSERT INTO log_projets (id_projet, date_action, action_p, categorie) 
 VALUES (1,CURRENT_TIMESTAMP, 'CREATION dun log','CREATION');
