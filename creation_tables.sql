@@ -1,11 +1,11 @@
 --Creation de table
-DROP TABLE IF EXISTS utilisateurs;
-DROP TABLE IF EXISTS initiateurs;
-DROP TABLE IF EXISTS projets;
-DROP TABLE IF EXISTS beneficaires;
-DROP TABLE IF EXISTS donateurs;
-DROP TABLE IF EXISTS log_projets;
-DROP TABLE IF EXISTS log_utilisateurs;
+DROP TABLE IF EXISTS utilisateurs CASCADE;
+DROP TABLE IF EXISTS initiateurs CASCADE;
+DROP TABLE IF EXISTS projets CASCADE;
+DROP TABLE IF EXISTS beneficaires CASCADE;
+DROP TABLE IF EXISTS donateurs CASCADE;
+DROP TABLE IF EXISTS log_projets CASCADE;
+DROP TABLE IF EXISTS log_utilisateurs CASCADE;
 
 --table utilisateurs
 CREATE TABLE IF NOT EXISTS utilisateurs (
@@ -79,11 +79,9 @@ CREATE TABLE IF NOT EXISTS log_utilisateurs (
 --table log_projets
 CREATE TABLE IF NOT EXISTS log_projets (
     id_log_p serial PRIMARY KEY,
-    id_projet INT NOT NULL,
-    date_action date NOT NULL,
     action_p VARCHAR(255) NOT NULL,
-    categorie VARCHAR(50) NOT NULL,
-    FOREIGN KEY (id_projet) REFERENCES projets(id_projet)
+    date_action date NOT NULL,
+    categorie VARCHAR(50) NOT NULL
 );
 
 --Insertion dans les tables
@@ -108,5 +106,5 @@ VALUES (1,1, 50,5);
 INSERT INTO log_utilisateurs (action_u, date_action, categorie) 
 VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
 
-INSERT INTO log_projets (id_projet, date_action, action_p, categorie) 
-VALUES (1,CURRENT_TIMESTAMP, 'CREATION dun log','CREATION');
+INSERT INTO log_projets (action_p, date_action, categorie) 
+VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
