@@ -11,7 +11,7 @@ RETURNS SETOF utilisateurs AS $$
 SELECT * FROM utilisateurs;
 $$ LANGUAGE SQL;
 
---fonction qui renvoie tous les utilisateurs plus vieux que "vieux"
+--fonction qui ajoute des utilisateurs dans la table utilisateurs
 CREATE OR REPLACE FUNCTION newUtilisateurs(unom utilisateurs.nom%TYPE, uprenom utilisateurs.prenom%TYPE, uage utilisateurs.age%TYPE, uadresse utilisateurs.adresse%TYPE, umail utilisateurs.mail%TYPE, univeau_global utilisateurs.niveau_global%TYPE, uactif utilisateurs.actif%TYPE, udate_inscription utilisateurs.date_inscription%TYPE) 
 RETURNS SETOF utilisateurs AS $$
 INSERT INTO utilisateurs (nom, prenom, age, adresse, mail, niveau_global, actif, date_inscription) 
@@ -19,7 +19,7 @@ VALUES (unom, uprenom, uage, uadresse, umail, univeau_global, uactif, udate_insc
 SELECT getUtilisateurs();
 $$ LANGUAGE SQL;
 
---fonction qui ajoute des utilisateurs dans la table utilisateurs
+--fonction qui renvoie tous les utilisateurs plus vieux que "vieux"
 CREATE OR REPLACE FUNCTION getUtilisateursAge(vieux int) 
 RETURNS SETOF utilisateurs AS $$ 
 SELECT * FROM utilisateurs WHERE age > vieux;
