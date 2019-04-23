@@ -19,3 +19,7 @@ Transfert de scripts :
 
     scp *.sql login@nivose.informatique.univ-paris-diderot.fr:~
 
+En local :
+ 
+sudo service postresql start
+psql postgres

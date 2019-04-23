@@ -2,7 +2,7 @@
 DROP TABLE IF EXISTS utilisateurs CASCADE;
 DROP TABLE IF EXISTS initiateurs CASCADE;
 DROP TABLE IF EXISTS projets CASCADE;
-DROP TABLE IF EXISTS beneficaires CASCADE;
+DROP TABLE IF EXISTS beneficiaires CASCADE;
 DROP TABLE IF EXISTS donateurs CASCADE;
 DROP TABLE IF EXISTS log_projets CASCADE;
 DROP TABLE IF EXISTS log_utilisateurs CASCADE;
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS initiateurs (
 );
 
 --table beneficiaire
-CREATE TABLE IF NOT EXISTS beneficaires (
+CREATE TABLE IF NOT EXISTS beneficiaires (
     id_beneficiaire serial PRIMARY KEY,
     id_utilisateur INT NOT NULL,
     id_projet INT NOT NULL,
@@ -71,7 +71,8 @@ CREATE TABLE IF NOT EXISTS donateurs (
 --table log_utilisateurs
 CREATE TABLE IF NOT EXISTS log_utilisateurs (
     id_log_u serial PRIMARY KEY,
-    action_u VARCHAR(255) NOT NULL,
+    old_value VARCHAR(255),
+    new_value VARCHAR(255),
     date_action date NOT NULL,
     categorie VARCHAR(50) NOT NULL
 );
@@ -79,7 +80,8 @@ CREATE TABLE IF NOT EXISTS log_utilisateurs (
 --table log_projets
 CREATE TABLE IF NOT EXISTS log_projets (
     id_log_p serial PRIMARY KEY,
-    action_p VARCHAR(255) NOT NULL,
+    old_value VARCHAR(255),
+    new_value VARCHAR(255),
     date_action date NOT NULL,
     categorie VARCHAR(50) NOT NULL
 );
@@ -97,14 +99,14 @@ VALUES ('Duval',1000,25000,'mon super projet', CURRENT_TIMESTAMP, True);
 INSERT INTO initiateurs (id_utilisateur, id_projet, descr, fiabilite) 
 VALUES (1,1, 'coucou',5);
 
-INSERT INTO beneficaires (id_utilisateur, id_projet, role_projet, montant) 
+INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) 
 VALUES (1,1, 'batteur',50);
 
 INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
 VALUES (1,1, 50,5);
 
-INSERT INTO log_utilisateurs (action_u, date_action, categorie) 
+INSERT INTO log_utilisateurs (new_value, date_action, categorie) 
 VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
 
-INSERT INTO log_projets (action_p, date_action, categorie) 
+INSERT INTO log_projets (new_value, date_action, categorie) 
 VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
