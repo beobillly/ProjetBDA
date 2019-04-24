@@ -4,8 +4,12 @@
 DROP FUNCTION IF EXISTS log_utilisateur_update CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_insert CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_delete CASCADE;
+
 DROP FUNCTION IF EXISTS verification_don CASCADE;
 DROP FUNCTION IF EXISTS pending_project CASCADE;
+
+DROP FUNCTION IF EXISTS update_date_connexion CASCADE;
+DROP FUNCTION IF EXISTS update_date_dernier_don CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -14,6 +18,24 @@ DROP FUNCTION IF EXISTS log_projet_delete CASCADE;
 --fonctions
 
 -- TABLE UTILISATEURS
+
+CREATE FUNCTION update_date_connexion(uid_utilisateur utilisateurs.id_utilisateur%TYPE) 
+RETURNS INTEGER AS $$
+BEGIN
+UPDATE utilisateurs SET date_derniere_connexion = current_timestamp
+WHERE id_utilisateur = uid_utilisateur;
+RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION update_date_dernier_don(uid_projet projets.id_projet%TYPE) 
+RETURNS INTEGER AS $$
+BEGIN
+UPDATE projets SET date_dernier_don = current_timestamp
+WHERE id_projet = uid_projet;
+RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
 
 --update 
 CREATE FUNCTION log_utilisateur_update() RETURNS trigger AS $$ 
@@ -125,8 +147,8 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 --insert
 
 CREATE TRIGGER p_p
-    BEFORE INSERT ON projets
-    FOR EACH ROW EXECUTE PROCEDURE pending_project();
+BEFORE INSERT ON projets
+FOR EACH ROW EXECUTE PROCEDURE pending_project();
 
 CREATE TRIGGER log_u_i
 AFTER INSERT ON utilisateurs
@@ -184,3 +206,4 @@ FOR EACH ROW EXECUTE PROCEDURE log_projet_delete();
 CREATE TRIGGER verif_d
 BEFORE UPDATE ON projets
 FOR EACH ROW EXECUTE PROCEDURE verification_don();
+

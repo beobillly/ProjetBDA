@@ -33,16 +33,6 @@ Tips :
 
 A Faire :
 
-    Rajouter des triggers :
-
-        -sur les dons
-        -sur la fiabilité
-        -sur les niveaux
-        -sur la date de derniere connexion de lutilisateur
-        -sur la date du dernier don
-        -...
-
-
     Rajouter des fonctions :
 
         -pour gerer les droits des utilisateurs
@@ -60,3 +50,5 @@ A Faire :
 
     Rajouter des index secondaires
     
+    Gerer la fiabilité
+    Gerer les niveaux 
