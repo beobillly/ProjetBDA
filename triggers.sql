@@ -4,6 +4,7 @@
 DROP FUNCTION IF EXISTS log_utilisateur_update CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_insert CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_delete CASCADE;
+DROP FUNCTION IF EXISTS verification_don CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -60,6 +61,17 @@ CREATE FUNCTION log_projet_delete() RETURNS trigger AS $$
 BEGIN
 INSERT INTO log_projets (old_value, date_action, categorie) VALUES (OLD, current_timestamp, 'DELETE');
 RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+--update don
+CREATE FUNCTION verification_don() RETURNS trigger AS $$ 
+BEGIN
+IF (NEW.montant_actuel >= NEW.montant_max) OR (NEW.actif = FALSE)
+THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet';
+END IF;
+RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -134,3 +146,7 @@ FOR EACH ROW EXECUTE PROCEDURE log_projet_insert();
 CREATE TRIGGER log_p_d
 AFTER DELETE ON projets
 FOR EACH ROW EXECUTE PROCEDURE log_projet_delete();
+
+CREATE TRIGGER verif_d
+BEFORE UPDATE ON projets
+FOR EACH ROW EXECUTE PROCEDURE verification_don();
