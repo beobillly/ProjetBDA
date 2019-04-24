@@ -5,6 +5,7 @@ DROP FUNCTION IF EXISTS log_utilisateur_update CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_insert CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_delete CASCADE;
 DROP FUNCTION IF EXISTS verification_don CASCADE;
+DROP FUNCTION IF EXISTS pending_project CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -123,7 +124,7 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
 --insert
 
-CREATE TRIGGER pending_project
+CREATE TRIGGER p_p
     BEFORE INSERT ON projets
     FOR EACH ROW EXECUTE PROCEDURE pending_project();
 
