@@ -3,6 +3,9 @@ DROP FUNCTION IF EXISTS getUtilisateursAge CASCADE;
 DROP FUNCTION IF EXISTS moyenneDonateursMontant CASCADE;
 DROP FUNCTION IF EXISTS newUtilisateurs CASCADE;
 DROP FUNCTION IF EXISTS getBeneficiairesProjet CASCADE;
+DROP FUNCTION IF EXISTS totalDons CASCADE;
+DROP FUNCTION IF EXISTS don CASCADE;
+
 
 -- Partie fonctions
 
@@ -39,7 +42,8 @@ DECLARE
 ligne RECORD;
 q donateurs.montant%TYPE := 0;
 i INTEGER := 0 ; 
-BEGIN FOR ligne IN SELECT montant FROM donateurs WHERE id_donateur = uid 
+BEGIN 
+FOR ligne IN SELECT montant FROM donateurs WHERE id_donateur = uid 
 LOOP
 	q = q + ligne.montant; 
 	i := i + 1 ;
@@ -50,6 +54,47 @@ END IF;
 RETURN (q :: DECIMAL / i) :: DECIMAL(4,2); 
 END;
 $$ LANGUAGE plpgsql;
+
+--Fonction qui renvoie le montant total donné
+CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE) 
+RETURNS INTEGER AS $$ 
+BEGIN
+RETURN (SELECT SUM (montant)
+		AS montant_total 
+		FROM donateurs
+		WHERE donateurs.id_utilisateur = uid);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE) 
+RETURNS INTEGER AS $$ 
+BEGIN
+RETURN (SELECT SUM (montant)
+		AS montant_total 
+		FROM donateurs
+		WHERE (donateurs.id_utilisateur = uid) AND (donateurs.id_projet = projid));
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
+RETURNS INTEGER AS $$
+
+BEGIN
+	
+	UPDATE projets
+	SET montant_actuel = donnation + montant_actuel
+	WHERE id_projet = projid;
+	
+	UPDATE donateurs
+	SET montant = donnation + montant
+	WHERE uid = donateurs.id_utilisateur AND id_projet = projid;
+
+	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 
 -- -- Partie remplissage des tables
 
@@ -70,7 +115,7 @@ VALUES ('Duval', 1000, 25000, 'mon super projet', CURRENT_TIMESTAMP, True);
 -- INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) 
 -- VALUES (1,1, 'batteur',50);
 
--- INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
+INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
 -- VALUES (1,1, 50,5);
 
 -- INSERT INTO log_utilisateurs (new_value, date_action, categorie) 
@@ -83,9 +128,11 @@ VALUES ('Duval', 1000, 25000, 'mon super projet', CURRENT_TIMESTAMP, True);
 --SELECT getUtilisateurs();
 --SELECT getUtilisateursAge(15);
 --SELECT moyenneDonateursMontant(1);
-SELECT getBeneficiairesProjet(2);
+SELECT totalDons(1);
 
+SELECT totalDons(1,1);
 
+SELECT don (1, 1, 75);
 
 
 
