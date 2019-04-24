@@ -55,6 +55,30 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION pending_project()
+    RETURNS TRIGGER
+    AS $$
+    DECLARE 
+	ligne RECORD;
+	i INTEGER := 0 ;
+    BEGIN FOR ligne IN SELECT id_projet FROM projets WHERE projets.nom = NEW.nom
+	LOOP
+		IF ligne.actif = TRUE 
+			THEN RAISE EXCEPTION 'Projet encore en cours sous le meme nom';
+		END IF;
+		i := i + 1 ;
+	END LOOP;
+    -- IF LENGTH(NEW.login_name) = 0 THEN
+    --     RAISE EXCEPTION 'Login name must not be empty.';
+    -- END IF;
+ 
+    -- IF POSITION(' ' IN NEW.login_name) > 0 THEN
+    --     RAISE EXCEPTION 'Login name must not include white space.';
+    -- END IF;
+    RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
 --delete 
 CREATE FUNCTION log_projet_delete() RETURNS trigger AS $$ 
 BEGIN
@@ -62,7 +86,6 @@ INSERT INTO log_projets (old_value, date_action, categorie) VALUES (OLD, current
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-
 
 --triggers
 
@@ -86,6 +109,11 @@ AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
 --insert
+
+CREATE TRIGGER pending_project
+    BEFORE INSERT ON projets
+    FOR EACH ROW EXECUTE PROCEDURE pending_project();
+
 CREATE TRIGGER log_u_i
 AFTER INSERT ON utilisateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_insert();
@@ -120,6 +148,10 @@ AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_delete();
 
 -- TABLE PROJETS
+
+CREATE TRIGGER log_u_u
+BEFORE INSERT ON projets
+FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
 CREATE TRIGGER log_p_u
 AFTER UPDATE ON projets
