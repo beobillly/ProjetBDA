@@ -52,3 +52,19 @@ A Faire :
     
     Gerer la fiabilité
     Gerer les niveaux 
+
+Tests :
+    1/ Fonctionnement normal d'un projet : 
+       Un utilisateur créé un projet, d'autres utilisateurs font des dons, le montant de base est dépassé et l'utilisateur met fin au projet
+    
+    2/ Fonctionnement normal d'un projet avec petites restrictions:
+       Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
+       Il constate qu'il ne peut pas et attend que son premier projet se termine puis fini par créer son deuxieme projet.
+    
+    3/ Fonctionnement normal d'un projet avec petites restrictions bis:
+       Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
+       Il constate qu'il ne peut pas et n'attend pas que son premier projet se termine. Il force la suppression de son premier projet puis créé son 
+       deuxieme projet.
+
+     
+    
