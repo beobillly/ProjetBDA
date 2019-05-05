@@ -13,11 +13,11 @@ DROP INDEX IF EXISTS X_UTI_MAIL CASCADE;
 --table utilisateurs
 CREATE TABLE IF NOT EXISTS utilisateurs (
     id_utilisateur serial PRIMARY KEY,
-    nom VARCHAR(20) NOT NULL,
-    prenom VARCHAR(20) NOT NULL,
+    nom VARCHAR(255) NOT NULL,
+    prenom VARCHAR(255) NOT NULL,
     age INT NOT NULL CHECK ( age > 18 ),
-    adresse VARCHAR(50) NOT NULL,
-    mail VARCHAR(50) NOT NULL,
+    adresse VARCHAR(255) NOT NULL,
+    mail VARCHAR(255) NOT NULL,
     niveau_global INT NOT NULL,
     actif BOOLEAN NOT NULL,
     date_inscription DATE NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
 --table projet
 CREATE TABLE IF NOT EXISTS projets (
     id_projet serial PRIMARY KEY,
-    nom VARCHAR(20) NOT NULL,
+    nom VARCHAR(255) NOT NULL,
     montant_base INT NOT NULL CHECK ( montant_base > 0) DEFAULT 1000,
     montant_max INT NOT NULL CHECK ( montant_max > montant_base ) DEFAULT 1000000,
     montant_actuel INT NOT NULL CHECK (montant_actuel < montant_max) DEFAULT 0,

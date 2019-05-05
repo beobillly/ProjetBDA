@@ -100,14 +100,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 --fonction qui termine un projet 
-CREATE OR REPLACE FUNCTION TerminerProjet(pid projets.id_projet%TYPE)
+CREATE OR REPLACE FUNCTION TerminerProjet(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
 RETURNS BOOLEAN AS $$
 BEGIN
-	IF(SELECT verification_montant_base(pid) = TRUE) OR (SELECT verification_date_limite_projet(pid) = TRUE)
-		THEN update projets
-		   set actif=false
-		 where id_projet = pid;
-		RETURN TRUE;
+	IF EXISTS (select * from initiateurs where initiateurs.id_utilisateur = uid and initiateurs.id_projet = pid)
+	THEN
+		IF(SELECT verification_montant_base(pid) = TRUE) OR (SELECT verification_date_limite_projet(pid) = TRUE)
+			THEN update projets
+		   		set actif=false
+		 		where id_projet = pid;
+				RETURN TRUE;
+			ELSE RAISE 'Le montant du projet n a pas encore atteint le but requis, utilisez TerminerProjetForce si vous êtes sur de vous';
+		END IF;
+	ELSE RAISE 'Identifiant de l initiateur non trouvé, TRANSACTION ANNULEE';
 	END IF;
 	RETURN FALSE;
 END;
