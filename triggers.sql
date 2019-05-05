@@ -113,6 +113,7 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+
 /*
 CREATE OR REPLACE FUNCTION pending_project()
     RETURNS TRIGGER
@@ -188,10 +189,8 @@ CREATE TRIGGER log_d_u
 AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
---insert
 
-/*
-CREATE TRIGGER p_p
+/*CREATE TRIGGER p_p
 BEFORE INSERT ON projets
 FOR EACH ROW EXECUTE PROCEDURE pending_project();
 */
