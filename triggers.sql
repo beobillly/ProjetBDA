@@ -188,10 +188,6 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_delete();
 
 -- TABLE PROJETS
 
-CREATE TRIGGER log_u_u
-BEFORE INSERT ON projets
-FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
-
 CREATE TRIGGER log_p_u
 AFTER UPDATE ON projets
 FOR EACH ROW EXECUTE PROCEDURE log_projet_update();
