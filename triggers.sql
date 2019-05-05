@@ -3,6 +3,7 @@
 
 DROP FUNCTION IF EXISTS log_utilisateur_update CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_insert CASCADE;
+DROP FUNCTION IF EXISTS log_utilisateur_before_insert CASCADE;
 DROP FUNCTION IF EXISTS log_utilisateur_delete CASCADE;
 
 DROP FUNCTION IF EXISTS verification_don CASCADE;
@@ -71,6 +72,17 @@ $$ LANGUAGE plpgsql;
 CREATE FUNCTION log_utilisateur_insert() RETURNS trigger AS $$ 
 BEGIN
 INSERT INTO log_utilisateurs (new_value, date_action, categorie) VALUES (NEW, current_timestamp, 'INSERT');
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+--insert 
+CREATE FUNCTION log_utilisateur_before_insert() RETURNS trigger AS $$ 
+BEGIN
+IF NOT EXISTS (select utilisateurs.mail from utilisateurs where utilisateurs.mail = NEW.mail)
+THEN RETURN NEW;
+ELSE RAISE EXCEPTION 'Le mail que vous avez choisi existe deja';
+END IF;
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -190,6 +202,10 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_insert();
 CREATE TRIGGER log_d_i
 AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_insert();
+
+CREATE TRIGGER log_u_i_b
+BEFORE INSERT ON utilisateurs
+FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_before_insert();
 
 --delete
 CREATE TRIGGER log_u_d
