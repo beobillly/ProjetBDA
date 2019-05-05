@@ -170,7 +170,7 @@ BEGIN
 	ELSE
 		PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
 		i := (SELECT MAX(id_projet) FROM projets);
-		PERFORM CreerInitiateur(uid, i );		
+		PERFORM CreerInitiateur(uid, i );
 		RETURN TRUE;
 	END IF;
 END;
