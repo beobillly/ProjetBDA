@@ -5,8 +5,10 @@ DROP FUNCTION IF EXISTS newUtilisateurs CASCADE;
 DROP FUNCTION IF EXISTS getBeneficiairesProjet CASCADE;
 DROP FUNCTION IF EXISTS totalDons CASCADE;
 DROP FUNCTION IF EXISTS don CASCADE;
-
-
+DROP FUNCTION IF EXISTS CreerInitiateur CASCADE;
+DROP FUNCTION IF EXISTS CreerInitiateurAvecDescr CASCADE;
+DROP FUNCTION IF EXISTS CreerProjet CASCADE;
+DROP FUNCTION IF EXISTS InitierProjet CASCADE;
 -- Partie fonctions
 
 --fonction qui renvoie tous les utilisateurs 
@@ -60,7 +62,7 @@ CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE)
 RETURNS INTEGER AS $$ 
 BEGIN
 RETURN (SELECT SUM (montant)
-		AS montant_total 
+		AS montant_total
 		FROM donateurs
 		WHERE donateurs.id_utilisateur = uid);
 END;
@@ -84,16 +86,57 @@ BEGIN
 	UPDATE projets
 	SET montant_actuel = donnation + montant_actuel
 	WHERE id_projet = projid;
-	
+
 	UPDATE donateurs
 	SET montant = donnation + montant
 	WHERE uid = donateurs.id_utilisateur AND id_projet = projid;
+
+	PERFORM update_date_connexion(uid);
+	PERFORM update_date_dernier_don(projid); 
 
 	RETURN 1;
 END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION CreerInitiateur(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
+RETURNS INTEGER AS $$ 
+BEGIN
+	INSERT INTO initiateurs (id_utilisateur, id_projet)
+	VALUES(uid, pid);
+	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION CreerInitiateurAvecDescr(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE, description VARCHAR(255))
+RETURNS INTEGER AS $$ 
+BEGIN
+	INSERT INTO initiateurs (id_utilisateur, id_projet, descr)
+	VALUES(uid, pid, description);
+	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION CreerProjet(nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
+RETURNS INTEGER AS $$ 
+BEGIN
+	INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite)
+	VALUES(nomProjet, montantBase, montantMax, descriptionProjet, deadline);
+	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION InitierProjet(uid utilisateurs.id_utilisateur%TYPE, nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
+RETURNS INTEGER AS $$ 
+DECLARE
+i INTEGER := (SELECT MAX(id_projet) as lastId FROM projets);
+BEGIN
+	PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
+	PERFORM CreerInitiateur(uid, i );
+
+	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- -- Partie remplissage des tables
@@ -106,8 +149,8 @@ $$ LANGUAGE plpgsql;
 -- SELECT newUtilisateurs('Auscour' :: VARCHAR,'jtfj':: VARCHAR,83, '2 rue du sae':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 -- SELECT newUtilisateurs('Vador' :: VARCHAR,'drg':: VARCHAR,47, '2 rue du sae':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
 
-INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite, actif) 
-VALUES ('Duval', 1000, 25000, 'mon super projet', CURRENT_TIMESTAMP, True);
+--INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite, actif) 
+--VALUES ('Dudet', 1000, 25000, 'lautre super projet', CURRENT_TIMESTAMP :: DATE, True);
 
 -- INSERT INTO initiateurs (id_utilisateur, id_projet, descr, fiabilite) 
 -- VALUES (1,1, 'coucou',5);
@@ -115,7 +158,7 @@ VALUES ('Duval', 1000, 25000, 'mon super projet', CURRENT_TIMESTAMP, True);
 -- INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) 
 -- VALUES (1,1, 'batteur',50);
 
-INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
+--INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
 -- VALUES (1,1, 50,5);
 
 -- INSERT INTO log_utilisateurs (new_value, date_action, categorie) 
@@ -128,11 +171,13 @@ INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau)
 --SELECT getUtilisateurs();
 --SELECT getUtilisateursAge(15);
 --SELECT moyenneDonateursMontant(1);
-SELECT totalDons(1);
+--SELECT totalDons(1);
 
-SELECT totalDons(1,1);
+--SELECT totalDons(1,1);
 
-SELECT don (1, 1, 75);
+--SELECT don (1, 1, 75);
+
+PERFORM InitierProjet(2, 'PanoProjectAlbum':: VARCHAR, 2000, 4000, 'Album du Panoramic' :: VARCHAR, TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
 
 
 

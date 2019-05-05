@@ -79,6 +79,7 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+/*
 CREATE OR REPLACE FUNCTION pending_project()
     RETURNS TRIGGER
     AS $$
@@ -102,6 +103,7 @@ CREATE OR REPLACE FUNCTION pending_project()
     RETURN NEW;
     END;
     $$ LANGUAGE plpgsql;
+    */
 
 --delete 
 CREATE FUNCTION log_projet_delete() RETURNS trigger AS $$ 
@@ -146,10 +148,11 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
 --insert
 
+/*
 CREATE TRIGGER p_p
 BEFORE INSERT ON projets
 FOR EACH ROW EXECUTE PROCEDURE pending_project();
-
+*/
 CREATE TRIGGER log_u_i
 AFTER INSERT ON utilisateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_insert();
