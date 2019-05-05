@@ -57,7 +57,7 @@ RETURN (q :: DECIMAL / i) :: DECIMAL(4,2);
 END;
 $$ LANGUAGE plpgsql;
 
---Fonction qui renvoie le montant total donné
+--Fonction qui renvoie le montant total donné par un utilisateur
 CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE) 
 RETURNS INTEGER AS $$ 
 BEGIN
@@ -68,6 +68,7 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
+--Fonction qui renvoie le montant total donné par un utilisateur sur un projet
 CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE) 
 RETURNS INTEGER AS $$ 
 BEGIN
@@ -78,6 +79,7 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
+--fonction qui fait un don
 CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
 RETURNS INTEGER AS $$
 
@@ -126,14 +128,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE OR REPLACE FUNCTION InitierProjet(uid utilisateurs.id_utilisateur%TYPE, nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
-RETURNS INTEGER AS $$ 
+RETURNS INTEGER AS $$
 DECLARE
 i INTEGER := (SELECT MAX(id_projet) as lastId FROM projets);
 BEGIN
 	PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
 	PERFORM CreerInitiateur(uid, i );
-
 	RETURN 1;
 END;
 $$ LANGUAGE plpgsql;
@@ -177,7 +179,8 @@ $$ LANGUAGE plpgsql;
 
 --SELECT don (1, 1, 75);
 
-PERFORM InitierProjet(2, 'PanoProjectAlbum':: VARCHAR, 2000, 4000, 'Album du Panoramic' :: VARCHAR, TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+SELECT InitierProjet
+(2, 'PanoProjectAlbum':: VARCHAR, 2000, 4000, 'Album du Panoramic' :: VARCHAR, TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
 
 
 

@@ -86,13 +86,21 @@ CREATE OR REPLACE FUNCTION pending_project()
     DECLARE 
 	ligne RECORD;
 	i INTEGER := 0 ;
-    BEGIN FOR ligne IN SELECT id_projet FROM projets WHERE projets.nom = NEW.nom
+    BEGIN FOR ligne IN SELECT id_projet FROM  WHERE projets.nom = NEW.nom
 	LOOP
 		IF ligne.actif = TRUE 
 			THEN RAISE EXCEPTION 'Projet encore en cours sous le meme nom';
 		END IF;
 		i := i + 1 ;
 	END LOOP;
+    
+    /*BEGIN FOR ligne IN SELECT id_projet FROM projets, initiateurs WHERE projets.id_projet = initiateurs.id_projet AND 
+    LOOP
+        IF ligne.actif = TRUE 
+            THEN RAISE EXCEPTION 'Projet encore en cours sous le meme nom';
+        END IF;
+        i := i + 1 ;
+    END LOOP;*/
     -- IF LENGTH(NEW.login_name) = 0 THEN
     --     RAISE EXCEPTION 'Login name must not be empty.';
     -- END IF;
@@ -148,11 +156,11 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
 --insert
 
-/*
+
 CREATE TRIGGER p_p
 BEFORE INSERT ON projets
 FOR EACH ROW EXECUTE PROCEDURE pending_project();
-*/
+
 CREATE TRIGGER log_u_i
 AFTER INSERT ON utilisateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_insert();
