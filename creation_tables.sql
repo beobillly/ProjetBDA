@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS log_projets CASCADE;
 DROP TABLE IF EXISTS log_utilisateurs CASCADE;
 DROP INDEX IF EXISTS X_DONA_MONTNIV CASCADE;
 DROP INDEX IF EXISTS X_PROJ_DATE_CREALIM CASCADE;
+DROP INDEX IF EXISTS X_UTI_MAIL CASCADE;
 
 --table utilisateurs
 CREATE TABLE IF NOT EXISTS utilisateurs (
@@ -91,6 +92,7 @@ CREATE TABLE IF NOT EXISTS log_projets (
 --index secondaire
 CREATE INDEX X_PROJ_DATE_CREALIM ON projets (date_creation, date_limite);
 CREATE INDEX X_DONA_MONTNIV ON donateurs (montant, niveau);
+CREATE INDEX X_UTI_MAIL ON utilisateurs (mail);
 
 --Insertion dans les tables
 
