@@ -10,6 +10,7 @@ DROP FUNCTION IF EXISTS CreerInitiateurAvecDescr CASCADE;
 DROP FUNCTION IF EXISTS CreerProjet CASCADE;
 DROP FUNCTION IF EXISTS InitierProjet CASCADE;
 DROP FUNCTION IF EXISTS TerminerProjet CASCADE;
+DROP FUNCTION IF EXISTS testProjectLifeCycle CASCADE;
 -- Partie fonctions
 
 --fonction qui renvoie tous les utilisateurs 
@@ -58,7 +59,7 @@ RETURN (q :: DECIMAL / i) :: DECIMAL(4,2);
 END;
 $$ LANGUAGE plpgsql;
 
---Fonction qui renvoie le montant total donné
+--Fonction qui renvoie le montant total donné par un utilisateur
 CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE) 
 RETURNS INTEGER AS $$ 
 BEGIN
@@ -69,7 +70,7 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
-
+--Fonction qui renvoie le montant total donné par un utilisateur sur un projet
 CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE) 
 RETURNS INTEGER AS $$ 
 BEGIN
@@ -80,7 +81,8 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION don(uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
+--fonction qui fait un don
+CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
 RETURNS INTEGER AS $$
 
 BEGIN
@@ -137,8 +139,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION aDejaProjetActif(uid initiateurs.id_utilisateur%TYPE)
+RETURNS BOOLEAN AS $$
+BEGIN
+	RETURN EXISTS(SELECT id_utilisateur FROM initiateurs, projets WHERE id_utilisateur = uid AND initiateurs.id_projet = projets.id_projet AND projets.actif = true);
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION CreerProjet(nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
 RETURNS INTEGER AS $$ 
+--DECLARE
+--ligne RECORD;
+--i INTEGER :=0;
 BEGIN
 	INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite)
 	VALUES(nomProjet, montantBase, montantMax, descriptionProjet, deadline);
@@ -146,19 +158,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+--Fonction pour initier un projet
 CREATE OR REPLACE FUNCTION InitierProjet(uid utilisateurs.id_utilisateur%TYPE, nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
-RETURNS INTEGER AS $$ 
+RETURNS BOOLEAN AS $$
 DECLARE
-i INTEGER := (SELECT MAX(id_projet) as lastId FROM projets);
+i INTEGER :=0;
 BEGIN
-	PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
-	PERFORM CreerInitiateur(uid, i );
-
-	RETURN 1;
+	IF aDejaProjetActif(uid) THEN	
+		RETURN FALSE;
+	ELSE
+		PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
+		i := (SELECT MAX(id_projet) FROM projets);
+		PERFORM CreerInitiateur(uid, i );		
+		RETURN TRUE;
+	END IF;
 END;
 $$ LANGUAGE plpgsql;
 
-
+CREATE OR REPLACE FUNCTION testProjectLifeCycle()
+RETURNS BOOLEAN as $$
+DECLARE
+i INTEGER := 0;
+BEGIN
+	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'herb@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'herb@gmail.com');
+	RETURN InitierProjet(i, 'mon nouveau disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	
+END;
+$$ LANGUAGE plpgsql;
 -- -- Partie remplissage des tables
 
 -- SELECT newUtilisateurs('Bernard' :: VARCHAR,'Jp':: VARCHAR,59, '2 rue imo':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
@@ -197,7 +224,11 @@ $$ LANGUAGE plpgsql;
 
 --SELECT don (1, 1, 75);
 
-SELECT InitierProjet(2, 'PanoProjectAlbum':: VARCHAR, 2000, 4000, 'Album du Panoramic' :: VARCHAR, TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+
+SELECT testProjectLifeCycle();
+
+
+
 
 
 
