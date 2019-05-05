@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS log_utilisateurs (
     old_value VARCHAR(255),
     new_value VARCHAR(255),
     date_action date NOT NULL,
-    categorie VARCHAR(50) NOT NULL
+    categorie VARCHAR(255) NOT NULL
 );
 
 --table log_projets
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS log_projets (
     old_value VARCHAR(255),
     new_value VARCHAR(255),
     date_action date NOT NULL,
-    categorie VARCHAR(50) NOT NULL
+    categorie VARCHAR(255) NOT NULL
 );
 
 --index secondaire
