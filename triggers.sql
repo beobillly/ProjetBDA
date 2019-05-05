@@ -114,7 +114,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-/*CREATE OR REPLACE FUNCTION pending_project()
+/*
+CREATE OR REPLACE FUNCTION pending_project()
     RETURNS TRIGGER
     AS $$
     DECLARE 
@@ -187,8 +188,6 @@ FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 CREATE TRIGGER log_d_u
 AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
-
---insert
 
 
 /*CREATE TRIGGER p_p

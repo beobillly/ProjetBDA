@@ -12,6 +12,7 @@ DROP FUNCTION IF EXISTS InitierProjet CASCADE;
 DROP FUNCTION IF EXISTS TerminerProjet CASCADE;
 DROP FUNCTION IF EXISTS TerminerProjetForce CASCADE;
 DROP FUNCTION IF EXISTS testProjectLifeCycle CASCADE;
+DROP FUNCTION IF EXISTS aDejaProjetActif CASCADE;
 -- Partie fonctions
 
 --fonction qui renvoie tous les utilisateurs 
@@ -169,7 +170,7 @@ RETURNS INTEGER AS $$
 BEGIN
 	INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite)
 	VALUES(nomProjet, montantBase, montantMax, descriptionProjet, deadline);
-	RETURN 1;
+	RETURN ligne.id_projet;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -197,7 +198,7 @@ i INTEGER := 0;
 BEGIN
 	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'herb@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'herb@gmail.com');
-	RETURN InitierProjet(i, 'mon nouveau disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	RETURN InitierProjet(i, 'mon nouveau groupe trop bien fait une tournee', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
 	
 END;
 $$ LANGUAGE plpgsql;
