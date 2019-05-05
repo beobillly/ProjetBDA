@@ -53,7 +53,7 @@ $$ LANGUAGE plpgsql;
 CREATE FUNCTION verification_date_limite_projet(uid_projet projets.id_projet%TYPE) 
 RETURNS BOOLEAN AS $$
 BEGIN
-IF (SELECT date_limite from projets where projets.id_projet = uid_projet) >= current_timestamp 
+IF (SELECT date_limite from projets where projets.id_projet = uid_projet) < current_timestamp 
 THEN RETURN TRUE;
 END IF;
 RETURN FALSE;
