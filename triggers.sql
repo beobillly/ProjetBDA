@@ -140,7 +140,7 @@ $$ LANGUAGE plpgsql;
 CREATE FUNCTION verification_don() RETURNS trigger AS $$ 
 BEGIN
 IF (NEW.montant_actuel >= OLD.montant_max) OR (OLD.actif = FALSE)
-THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet';
+THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet, le projet n est plus disponible à la modification';
 END IF;
 RETURN NEW;
 END;
