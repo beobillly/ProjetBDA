@@ -79,7 +79,7 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
-/*
+
 CREATE OR REPLACE FUNCTION pending_project()
     RETURNS TRIGGER
     AS $$
@@ -103,7 +103,7 @@ CREATE OR REPLACE FUNCTION pending_project()
     RETURN NEW;
     END;
     $$ LANGUAGE plpgsql;
-    */
+    
 
 --delete 
 CREATE FUNCTION log_projet_delete() RETURNS trigger AS $$ 
