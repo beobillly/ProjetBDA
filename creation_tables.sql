@@ -101,7 +101,7 @@ INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant)
 VALUES (1,1, 'batteur',50);
 
 INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
-VALUES (1,1, 50,5);
+VALUES (1,1, 0,5);
 
 INSERT INTO log_utilisateurs (new_value, date_action, categorie) 
 VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
