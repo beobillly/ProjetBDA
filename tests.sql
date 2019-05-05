@@ -10,6 +10,7 @@ DROP FUNCTION IF EXISTS CreerInitiateurAvecDescr CASCADE;
 DROP FUNCTION IF EXISTS CreerProjet CASCADE;
 DROP FUNCTION IF EXISTS InitierProjet CASCADE;
 DROP FUNCTION IF EXISTS TerminerProjet CASCADE;
+DROP FUNCTION IF EXISTS TerminerProjetForce CASCADE;
 DROP FUNCTION IF EXISTS testProjectLifeCycle CASCADE;
 -- Partie fonctions
 
@@ -120,6 +121,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION TerminerProjetForce(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
+RETURNS BOOLEAN AS $$
+BEGIN
+	IF EXISTS (select * from initiateurs where initiateurs.id_utilisateur = uid and initiateurs.id_projet = pid)
+	THEN
+		update projets
+		set actif=false
+		where id_projet = pid;
+		RETURN TRUE;
+	ELSE RAISE 'Identifiant de l initiateur non trouvé, TRANSACTION ANNULEE';
+	END IF;
+	RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION CreerInitiateur(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
 RETURNS INTEGER AS $$ 
