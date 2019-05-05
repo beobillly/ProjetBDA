@@ -109,6 +109,9 @@ $$ LANGUAGE plpgsql;
 CREATE FUNCTION log_projet_insert() RETURNS trigger AS $$ 
 BEGIN
 INSERT INTO log_projets (new_value, date_action, categorie) VALUES (NEW, current_timestamp, 'INSERT');
+INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) VALUES (1, NEW.id_projet, 'Taxe platforme', 5*NEW.montant_base/100);
+INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) 
+VALUES (1,1, 'batteur',50);
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;

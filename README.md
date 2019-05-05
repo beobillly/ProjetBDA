@@ -66,5 +66,15 @@ Tests :
        Il constate qu'il ne peut pas et n'attend pas que son premier projet se termine. Il force la suppression de son premier projet puis créé son 
        deuxieme projet.
 
-     
+    4/ Fonctionnement normal d'un projet avec limite de temps:
+       Un utilisateur créé un projet, il a quelques dons puis le projet tombe dans l'oubli.
+       Le projet est supprimé quand le temps limite est dépassé.
+    
+    5/ Fonctionnement normal d'un projet plusieurs donateurs:
+       Un utilisateur fait des dons à un projet, son rang augmente, le temps passe, son rang diminue, il fait des dons conséquents à 3 projets et son rang augmente beaucoup.
+
+    6/ Fonctionnement normal d'un projet avec petites restrictions:
+       Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
+       Il constate qu'il ne peut pas et attend que son premier projet se termine puis fini par créer son deuxieme projet.
+    
     

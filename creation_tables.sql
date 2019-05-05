@@ -97,7 +97,7 @@ CREATE INDEX X_UTI_MAIL ON utilisateurs (mail);
 --Insertion dans les tables
 
 INSERT INTO utilisateurs (nom, prenom, age, adresse, mail, niveau_global, actif, date_inscription) 
-VALUES ('Duval','Albert',25, '2 rue du sae','bebert@gmail.com',1, FALSE, CURRENT_TIMESTAMP);
+VALUES ('Platforme','Taxe',99, '2 rue du fric','filetonfric@gmail.com',1, true, CURRENT_TIMESTAMP);
 
 INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite, actif) 
 VALUES ('Duval',1000,25000,'mon super projet', CURRENT_TIMESTAMP, True);
