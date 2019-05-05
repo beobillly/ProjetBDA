@@ -9,6 +9,7 @@ DROP FUNCTION IF EXISTS CreerInitiateur CASCADE;
 DROP FUNCTION IF EXISTS CreerInitiateurAvecDescr CASCADE;
 DROP FUNCTION IF EXISTS CreerProjet CASCADE;
 DROP FUNCTION IF EXISTS InitierProjet CASCADE;
+DROP FUNCTION IF EXISTS TerminerProjet CASCADE;
 -- Partie fonctions
 
 --fonction qui renvoie tous les utilisateurs 
@@ -68,6 +69,7 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE) 
 RETURNS INTEGER AS $$ 
 BEGIN
@@ -78,7 +80,7 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
+CREATE OR REPLACE FUNCTION don(uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
 RETURNS INTEGER AS $$
 
 BEGIN
@@ -93,8 +95,21 @@ BEGIN
 
 	PERFORM update_date_connexion(uid);
 	PERFORM update_date_dernier_don(projid); 
-
 	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+--fonction qui termine un projet 
+CREATE OR REPLACE FUNCTION TerminerProjet(pid projets.id_projet%TYPE)
+RETURNS BOOLEAN AS $$
+BEGIN
+	IF(SELECT verification_montant_base(pid) = TRUE) OR (SELECT verification_date_limite_projet(pid) = TRUE)
+		THEN update projets
+		   set actif=false
+		 where id_projet = pid;
+		RETURN TRUE;
+	END IF;
+	RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -177,7 +192,7 @@ $$ LANGUAGE plpgsql;
 
 --SELECT don (1, 1, 75);
 
-PERFORM InitierProjet(2, 'PanoProjectAlbum':: VARCHAR, 2000, 4000, 'Album du Panoramic' :: VARCHAR, TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+SELECT InitierProjet(2, 'PanoProjectAlbum':: VARCHAR, 2000, 4000, 'Album du Panoramic' :: VARCHAR, TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
 
 
 
