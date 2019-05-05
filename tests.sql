@@ -69,11 +69,7 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
-<<<<<<< HEAD
 --Fonction qui renvoie le montant total donné par un utilisateur sur un projet
-=======
-
->>>>>>> 8410d98542a2a1ba58b2137713e31e4375e5e5f5
 CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE) 
 RETURNS INTEGER AS $$ 
 BEGIN
@@ -84,12 +80,8 @@ RETURN (SELECT SUM (montant)
 END;
 $$ LANGUAGE plpgsql;
 
-<<<<<<< HEAD
 --fonction qui fait un don
 CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
-=======
-CREATE OR REPLACE FUNCTION don(uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
->>>>>>> 8410d98542a2a1ba58b2137713e31e4375e5e5f5
 RETURNS INTEGER AS $$
 
 BEGIN
