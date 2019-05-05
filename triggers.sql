@@ -10,6 +10,8 @@ DROP FUNCTION IF EXISTS pending_project CASCADE;
 
 DROP FUNCTION IF EXISTS update_date_connexion CASCADE;
 DROP FUNCTION IF EXISTS update_date_dernier_don CASCADE;
+DROP FUNCTION IF EXISTS verification_montant_base CASCADE;
+DROP FUNCTION IF EXISTS verification_date_limite_projet CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -34,6 +36,26 @@ BEGIN
 UPDATE projets SET date_dernier_don = current_timestamp
 WHERE id_projet = uid_projet;
 RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION verification_montant_base(uid_projet projets.id_projet%TYPE) 
+RETURNS BOOLEAN AS $$
+BEGIN
+IF (SELECT montant_actuel from projets where projets.id_projet = uid_projet) >= (SELECT montant_base from projets where projets.id_projet = uid_projet) 
+THEN RETURN TRUE;
+END IF;
+RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION verification_date_limite_projet(uid_projet projets.id_projet%TYPE) 
+RETURNS BOOLEAN AS $$
+BEGIN
+IF (SELECT date_limite from projets where projets.id_projet = uid_projet) >= current_timestamp 
+THEN RETURN TRUE;
+END IF;
+RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -125,8 +147,8 @@ $$ LANGUAGE plpgsql;
 --update don
 CREATE FUNCTION verification_don() RETURNS trigger AS $$ 
 BEGIN
-IF (NEW.montant_actuel >= NEW.montant_max) OR (NEW.actif = FALSE)
-THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet';
+IF (NEW.montant_actuel >= OLD.montant_max) OR (OLD.actif = FALSE)
+THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet, le projet n est plus disponible à la modification';
 END IF;
 RETURN NEW;
 END;
