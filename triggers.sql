@@ -166,8 +166,8 @@ BEGIN
 IF (NEW.montant_actuel >= OLD.montant_max) OR (OLD.actif = FALSE)
 THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet, le projet n est plus disponible à la modification';
 END IF;
-IF (NEW.montant_actuel < OLD.montant_actuel) OR (NEW.montant_actuel < 0)
-THEN RAISE EXCEPTION 'Le montant de votre don ne doit pas etre negatif';
+IF (NEW.montant_actuel <= OLD.montant_actuel) OR (NEW.montant_actuel < 0)
+THEN RAISE EXCEPTION 'Le montant de votre don ne doit pas etre negatif ou nul';
 END IF;
 
 RETURN NEW;
