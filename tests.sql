@@ -237,15 +237,15 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'koku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jiji@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
-	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0jo@gmail.com');
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'jiji@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
-	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
-	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
-	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jjo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'koku@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'koku@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jajo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
 
 	RETURN TerminerProjet(i, (SELECT MAX(id_projet) from projets));
 	
@@ -259,15 +259,15 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('Bisasdasdous' :: VARCHAR,'dsde':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kilo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jfasd' :: VARCHAR,'cocaso':: VARCHAR,56, '70 rue du plankton':: VARCHAR,'jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+		PERFORM newUtilisateurs('jf' :: VARCHAR,'codco':: VARCHAR,78, '2 rue du plankton':: VARCHAR,'jiko@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
-	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0jo@gmail.com');
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'jiko@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
-	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
-	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
-	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jjo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'kilo@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'kilo@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
 
 	RETURN TerminerProjetForce(i, (SELECT MAX(id_projet) from projets));
 	
@@ -275,7 +275,23 @@ END;
 $$ LANGUAGE plpgsql;
 -- -- Partie remplissage des tables
 
+--Teste si on essaye de creer 2 projets
+CREATE OR REPLACE FUNCTION test2ProjectCreatedBySamePerson()
+RETURNS BOOLEAN as $$
+DECLARE
+i INTEGER := 0;
+BEGIN
+	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kula@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajou@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0j9@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0j9@gmail.com');
+	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0j9@gmail.com');
+	RETURN InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	
+END;
+$$ LANGUAGE plpgsql;
 
 -- SELECT newUtilisateurs('Bernard' :: VARCHAR,'Jp':: VARCHAR,59, '2 rue imo':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
 -- SELECT newUtilisateurs('Paul' :: VARCHAR,'a':: VARCHAR,57, '2 rue du sae':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
@@ -314,8 +330,8 @@ $$ LANGUAGE plpgsql;
 --SELECT don (1, 1, 75);
 
 
-SELECT testProjectLifeCycleNotEnoughMoneyForceShutdown();
-
+SELECT test2ProjectCreatedBySamePerson();
+SELECT testProjectLifeCycle();
 
 
 
