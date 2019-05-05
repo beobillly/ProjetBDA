@@ -11,7 +11,10 @@ DROP FUNCTION IF EXISTS CreerProjet CASCADE;
 DROP FUNCTION IF EXISTS InitierProjet CASCADE;
 DROP FUNCTION IF EXISTS TerminerProjet CASCADE;
 DROP FUNCTION IF EXISTS TerminerProjetForce CASCADE;
+DROP FUNCTION IF EXISTS testProjectCreation CASCADE;
 DROP FUNCTION IF EXISTS testProjectLifeCycle CASCADE;
+DROP FUNCTION IF EXISTS testProjectLifeCycleNotEnoughMoney CASCADE;
+DROP FUNCTION IF EXISTS testProjectLifeCycleNotEnoughMoneyForceShutdown CASCADE;
 DROP FUNCTION IF EXISTS aDejaProjetActif CASCADE;
 -- Partie fonctions
 
@@ -170,7 +173,7 @@ RETURNS INTEGER AS $$
 BEGIN
 	INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite)
 	VALUES(nomProjet, montantBase, montantMax, descriptionProjet, deadline);
-	RETURN ligne.id_projet;
+	RETURN 1;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -181,6 +184,7 @@ DECLARE
 i INTEGER :=0;
 BEGIN
 	IF aDejaProjetActif(uid) THEN	
+		RAISE 'Vous avez deja un projet actif';
 		RETURN FALSE;
 	ELSE
 		PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
@@ -191,7 +195,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION testProjectLifeCycle()
+--Teste la creation d'un projet en entier
+CREATE OR REPLACE FUNCTION testProjectCreation()
 RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
@@ -202,7 +207,75 @@ BEGIN
 	
 END;
 $$ LANGUAGE plpgsql;
+
+--Teste la vie d'un projet en entier
+
+CREATE OR REPLACE FUNCTION testProjectLifeCycle()
+RETURNS BOOLEAN as $$
+DECLARE
+i INTEGER := 0;
+BEGIN
+	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0jo@gmail.com');
+	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 2000);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 2000);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jjo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
+
+	RETURN TerminerProjet(i, (SELECT MAX(id_projet) from projets));
+	
+END;
+$$ LANGUAGE plpgsql;
+
+--Teste la vie d'un projet qui n'a pas assez d'argent
+
+CREATE OR REPLACE FUNCTION testProjectLifeCycleNotEnoughMoney()
+RETURNS BOOLEAN as $$
+DECLARE
+i INTEGER := 0;
+BEGIN
+	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0jo@gmail.com');
+	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jjo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
+
+	RETURN TerminerProjet(i, (SELECT MAX(id_projet) from projets));
+	
+END;
+$$ LANGUAGE plpgsql;
+
+
+--Teste la vie d'un projet qui n'a pas assez d'argent et qui est fermé de force
+CREATE OR REPLACE FUNCTION testProjectLifeCycleNotEnoughMoneyForceShutdown()
+RETURNS BOOLEAN as $$
+DECLARE
+i INTEGER := 0;
+BEGIN
+	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+
+	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0jo@gmail.com');
+	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'k@gmail.com'), (SELECT MAX(id_projet) from projets), 500);
+	PERFORM don ((SELECT id_utilisateur FROM utilisateurs WHERE mail = 'jjo@gmail.com'), (SELECT MAX(id_projet) from projets), 3000);
+
+	RETURN TerminerProjetForce(i, (SELECT MAX(id_projet) from projets));
+	
+END;
+$$ LANGUAGE plpgsql;
 -- -- Partie remplissage des tables
+
+
 
 -- SELECT newUtilisateurs('Bernard' :: VARCHAR,'Jp':: VARCHAR,59, '2 rue imo':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
 -- SELECT newUtilisateurs('Paul' :: VARCHAR,'a':: VARCHAR,57, '2 rue du sae':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
@@ -241,7 +314,7 @@ $$ LANGUAGE plpgsql;
 --SELECT don (1, 1, 75);
 
 
-SELECT testProjectLifeCycle();
+SELECT testProjectLifeCycleNotEnoughMoneyForceShutdown();
 
 
 
