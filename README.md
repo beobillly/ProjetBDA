@@ -31,28 +31,6 @@ Tips :
         ne pas oublier le DROP CASCADE avant la creation d'une fonction 
 
 
-A Faire :
-
-    Rajouter des fonctions :
-
-        -pour gerer les droits des utilisateurs
-        -pour ajouter des projets + initateurs + donateurs + beneficiaires
-        -pour faire toute opération utile, ex : consulter tous les logs d'insertion, modifier le niveau d'un utilisateur
-        -pour faire les tests
-
-    Remplir les tables (en utilisant des fonctions créées au préalable)
-
-    Faire pleins de tests :
-        -pour gerer les opérations interdites
-        -pour creer plusieurs projets, gerer leur developpement ainsi que leur achevement
-        -pour tester les fonctions
-        -pour gerer un maximum de cas possibles
-
-    Rajouter des index secondaires
-    
-    Gerer la fiabilité
-    Gerer les niveaux 
-
 Tests :
     1/ Fonctionnement normal d'un projet : 
        Un utilisateur créé un projet, d'autres utilisateurs font des dons, le montant de base est dépassé et l'utilisateur met fin au projet
@@ -102,3 +80,11 @@ Tests :
     19/ un beneficiaire veut savoir le nombre de batteur qui sont beneficiaires de son projet
 
     20/ La platforme veut savoir cb elle a gagné depuis le debut
+
+Faire marcher le projet : 
+
+    \i creation_tables.sql
+    \i triggers.sql
+    \i tests.sql (batterie de tests)
+
+    Executer les tests un par un 
