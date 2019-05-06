@@ -1,0 +1,23 @@
+Fonctions :
+
+    Tout ce qui a attrait à la vie d'un projet
+
+Triggers :
+
+    Chaque opération d'insertion, de suppression et de mise a jour est enregistrée
+
+Regles de gestion :
+
+    Check precisé sur le rapport
+
+Index :
+
+    3 index : 
+    CREATE INDEX X_PROJ_DATE_CREALIM ON projets (date_creation, date_limite);
+    pour accelerer les recherches sur les projets en fonctions des dates et faire des stats
+
+    CREATE INDEX X_DONA_MONTNIV ON donateurs (montant, niveau);
+    pour accelerer les requetes (nombreuses) portant sur le montant donné et le niveau d'un donateur
+
+    CREATE INDEX X_UTI_MAIL ON utilisateurs (mail);
+    pour accelerer les checks des mails

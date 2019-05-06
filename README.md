@@ -31,7 +31,6 @@ Tips :
         ne pas oublier le DROP CASCADE avant la creation d'une fonction 
 
 
-
 Tests :
     1/ Fonctionnement normal d'un projet : 
        Un utilisateur créé un projet, d'autres utilisateurs font des dons, le montant de base est dépassé et l'utilisateur met fin au projet
@@ -81,3 +80,11 @@ Tests :
     19/ un beneficiaire veut savoir le nombre de batteur qui sont beneficiaires de son projet
 
     20/ La platforme veut savoir cb elle a gagné depuis le debut
+
+Faire marcher le projet : 
+
+    \i creation_tables.sql
+    \i triggers.sql
+    \i tests.sql (batterie de tests)
+
+    Executer les tests un par un 
