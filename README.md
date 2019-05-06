@@ -79,7 +79,7 @@ Tests :
     7/ Fonctionnement normal d'un projet avec petites restrictions:
        Un utilisateur de moins de 18 ans tente de s'inscrire, cela ne marche pas, fin.
 
-    8-9/ Un utilisateur tente de créer un projet avec un solde(montant         base ou monatant max) negatif, cela ne marche pas.
+    8-9/ Un utilisateur tente de créer un projet avec un solde(montant_base ou monatant max) negatif, cela ne marche pas.
 
     10/ un utlisateur tente de creer un projet et tente un don plus haut      que le max du projet autorisé
 
