@@ -31,27 +31,6 @@ Tips :
         ne pas oublier le DROP CASCADE avant la creation d'une fonction 
 
 
-A Faire :
-
-    Rajouter des fonctions :
-
-        -pour gerer les droits des utilisateurs
-        -pour ajouter des projets + initateurs + donateurs + beneficiaires
-        -pour faire toute opération utile, ex : consulter tous les logs d'insertion, modifier le niveau d'un utilisateur
-        -pour faire les tests
-
-    Remplir les tables (en utilisant des fonctions créées au préalable)
-
-    Faire pleins de tests :
-        -pour gerer les opérations interdites
-        -pour creer plusieurs projets, gerer leur developpement ainsi que leur achevement
-        -pour tester les fonctions
-        -pour gerer un maximum de cas possibles
-
-    Rajouter des index secondaires
-    
-    Gerer la fiabilité
-    Gerer les niveaux 
 
 Tests :
     1/ Fonctionnement normal d'un projet : 
