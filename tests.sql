@@ -397,6 +397,10 @@ BEGIN
 	RETURN InitierProjet(i, 'mon nouveau groupe trop bien fait une tournee', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2015/07/09', 'yyyy/mm/dd') :: DATE);
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+
 -- SELECT newUtilisateurs('Bernard' :: VARCHAR,'Jp':: VARCHAR,59, '2 rue imo':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
 -- SELECT newUtilisateurs('Paul' :: VARCHAR,'a':: VARCHAR,57, '2 rue du sae':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 -- SELECT newUtilisateurs('Luc' :: VARCHAR,'Juzl':: VARCHAR,45, '2 rue du sae':: VARCHAR,'bebert@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
@@ -424,24 +428,64 @@ $$ LANGUAGE plpgsql;
 -- VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
 
 -- Partie test
---SELECT getUtilisateurs();
---SELECT getUtilisateursAge(15);
---SELECT moyenneDonateursMontant(1);
---SELECT totalDons(1);
+SELECT getUtilisateurs();
+SELECT getUtilisateursAge(15);
+SELECT moyenneDonateursMontant(1);
+SELECT totalDons(1);
+SELECT totalDons(1,1);
+SELECT don (1, 1, 75);
 
---SELECT totalDons(1,1);
 
---SELECT don (1, 1, 75);
+--Teste la creation d'un projet en entier
+SELECT testProjectCreation();
+
+--Teste la vie d'un projet en entier
+SELECT testProjectLifeCycle();
+
+--Teste la vie d'un projet qui n'a pas assez d'argent
+SELECT testProjectLifeCycleNotEnoughMoney();
+
+--Teste la vie d'un projet qui n'a pas assez d'argent et qui est fermé de force
+SELECT testProjectLifeCycleNotEnoughMoneyForceShutdown();
+
+--Teste si on essaye de creer 2 projets
+SELECT test2ProjectCreatedBySamePerson();
 
 /*
-SELECT test2ProjectCreatedBySamePerson();
-SELECT testProjectLifeCycle();
-SELECT testProjectLifeCycleNotEnoughMoney();
-SELECT testProjectLifeCycleNotEnoughMoneyForceShutdown();
+Fonctionnement normal d'un projet avec petites restrictions:
+       Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
+       Il constate qu'il ne peut pas et attend que son premier projet se termine puis fini par créer son deuxieme projet.
 */
---SELECT testTooMuchMoney();
---SELECT testDateIncorrecte();
-SELECT testDonNegatif();
+SELECT testBehaviour();
 
+--un utilisateur de moins de 18 ans tente de s'inscrire, cela ne marche pas, fin.
+SELECT testTropJeune ();
 
+--Un utilisateur tente de créer un projet avec un solde(montant_base ou monatant max) negatif, cela ne marche pas.
+SELECT montantNegatif ();
 
+--un utlisateur tente de faire un don negatif
+SELECT testDonNegatif ();
+
+--un utlisateur tente de creer un projet et un autre tente un don plus haut que le max du projet autorisé
+SELECT testTooMuchMoney();
+
+--un utlisateur tente de creer un projet avec la date de limite  inférieur à la date courante
+SELECT testDateIncorrecte();
+
+--un administrateur veut obtenir les mails de tous les utilisateurs inscrits en novembre 2018
+SELECT newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kikiki@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/07/09', 'yyyy/mm/dd') :: DATE);
+SELECT newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jaaaajo@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/11/09', 'yyyy/mm/dd') :: DATE);	
+SELECT newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,32, '2 rue du sae':: VARCHAR,'bludabediba@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/11/09', 'yyyy/mm/dd') :: DATE);
+SELECT mail FROM utilisateurs WHERE (date_inscription > TO_DATE('2018/10/31', 'yyyy/mm/dd') :: DATE) AND (date_inscription < TO_DATE('2018/12/01', 'yyyy/mm/dd') :: DATE);
+
+--un administrateur veut obtenir les projets crées en novembre 2018
+SELECT * FROM projets WHERE (date_creation > TO_DATE('2018/10/31', 'yyyy/mm/dd') :: DATE) AND (date_creation < TO_DATE('2018/12/01', 'yyyy/mm/dd') :: DATE);
+
+--petites tests divers
+SELECT getUtilisateurs();
+SELECT getUtilisateursAge(15);
+SELECT moyenneDonateursMontant(1);
+SELECT totalDons(1);
+SELECT totalDons(1,1);
+SELECT don (1, 1, 75);
