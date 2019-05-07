@@ -149,7 +149,7 @@ CREATE OR REPLACE FUNCTION pending_project()
 RETURNS TRIGGER 
 AS $$
 BEGIN
-    IF (SELECT COUNT(*) from initiateurs, projets WHERE initiateurs.id_projet = projets.id_projet AND NEW.id_projet = projets.id_projet AND projets.actif = TRUE) > 1
+    IF (SELECT COUNT(*) from initiateurs, projets WHERE initiateurs.id_projet = projets.id_projet AND NEW.id_utilisateur = initiateurs.id_utilisateur AND projets.actif = TRUE) > 1
     THEN
         RAISE EXCEPTION 'L initiateur aurais plus d un projet actif';
         RETURN OLD;
@@ -204,12 +204,7 @@ CREATE TRIGGER log_d_u
 AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
-
 CREATE TRIGGER p_p
-BEFORE INSERT ON projets
-FOR EACH ROW EXECUTE PROCEDURE pending_project();
-
-CREATE TRIGGER p_p2
 BEFORE INSERT ON initiateurs
 FOR EACH ROW EXECUTE PROCEDURE pending_project();
 
