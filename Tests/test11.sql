@@ -15,7 +15,7 @@ i INTEGER := 0;
 BEGIN
 	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kudla@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajouju@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'kokiku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'kokiku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'kokiku@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);

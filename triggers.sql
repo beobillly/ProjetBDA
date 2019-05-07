@@ -13,6 +13,8 @@ DROP FUNCTION IF EXISTS update_date_connexion CASCADE;
 DROP FUNCTION IF EXISTS update_date_dernier_don CASCADE;
 DROP FUNCTION IF EXISTS verification_montant_base CASCADE;
 DROP FUNCTION IF EXISTS verification_date_limite_projet CASCADE;
+DROP FUNCTION IF EXISTS verification_retours_beneficiaires CASCADE;
+DROP FUNCTION IF EXISTS verification_retours_beneficiaires_extras CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -116,40 +118,47 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+--Vérifie si total montant de retour pour les beneficiaires est inférieur au montant de base du projet
+CREATE FUNCTION verification_retours_beneficiaires() 
+RETURNS trigger AS $$
+BEGIN
+IF (SELECT SUM(beneficiaires.montant) from beneficiares where beneficiaires.id_projet = NEW.id_projet) <= (SELECT montant_base FROM projets WHERE id_projet = NEW.id_projet)
+THEN
+RAISE EXCEPTION 'Le total des retour pour les béneficiaires dépasse le montant de base';
+RETURN OLD;
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-/*
+--Vérifie si poucentage total de retour pour les beneficiaires est inférieur a 100%.
+CREATE FUNCTION verification_retours_beneficiaires_extras() 
+RETURNS trigger AS $$
+BEGIN
+IF (SELECT SUM(beneficiaires.pourcentage_extra) from beneficiares where beneficiaires.id_projet = NEW.id_projet) <= 100
+THEN
+RAISE EXCEPTION 'Le total des pourcentages des extras dépasse 100';
+RETURN OLD;
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE FUNCTION pending_project()
-    RETURNS TRIGGER
-    AS $$
-    DECLARE 
-	ligne RECORD;
-	i INTEGER := 0 ;
-    BEGIN FOR ligne IN SELECT id_projet FROM  WHERE projets.nom = NEW.nom
-	LOOP
-		IF ligne.actif = TRUE 
-			THEN RAISE EXCEPTION 'Projet encore en cours sous le meme nom';
-		END IF;
-		i := i + 1 ;
-	END LOOP;
-    
-    BEGIN FOR ligne IN SELECT id_projet FROM projets, initiateurs WHERE projets.id_projet = initiateurs.id_projet AND 
-    LOOP
-        IF ligne.actif = TRUE 
-            THEN RAISE EXCEPTION 'Projet encore en cours sous le meme nom';
-        END IF;
-        i := i + 1 ;
-    END LOOP;
-    -- IF LENGTH(NEW.login_name) = 0 THEN
-    --     RAISE EXCEPTION 'Login name must not be empty.';
-    -- END IF;
- 
-    -- IF POSITION(' ' IN NEW.login_name) > 0 THEN
-    --     RAISE EXCEPTION 'Login name must not include white space.';
-    -- END IF;
+RETURNS TRIGGER 
+AS $$
+BEGIN
+    IF (SELECT COUNT(*) from initiateurs, projets WHERE initiateurs.id_projet = projets.id_projet AND NEW.id_projet = projets.id_projet AND projets.actif = TRUE) > 1
+    THEN
+        RAISE EXCEPTION 'L initiateur aurais plus d un projet actif';
+        RETURN OLD;
+    END IF;
     RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-    */
+END;
+$$ LANGUAGE plpgsql;
+
+
 
 --delete 
 CREATE FUNCTION log_projet_delete() RETURNS trigger AS $$ 
@@ -169,7 +178,6 @@ END IF;
 IF (NEW.montant_actuel <= OLD.montant_actuel) OR (NEW.montant_actuel < 0)
 THEN RAISE EXCEPTION 'Le montant de votre don ne doit pas etre negatif ou nul';
 END IF;
-
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -197,10 +205,23 @@ AFTER UPDATE ON donateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_update();
 
 
-/*CREATE TRIGGER p_p
+CREATE TRIGGER p_p
 BEFORE INSERT ON projets
 FOR EACH ROW EXECUTE PROCEDURE pending_project();
-*/
+
+CREATE TRIGGER p_p2
+BEFORE INSERT ON initiateurs
+FOR EACH ROW EXECUTE PROCEDURE pending_project();
+
+
+CREATE TRIGGER verif_r_b
+AFTER UPDATE ON beneficiaires
+FOR EACH ROW EXECUTE PROCEDURE verification_retours_beneficiaires();
+
+CREATE TRIGGER verif_r_b_e
+AFTER UPDATE ON beneficiaires
+FOR EACH ROW EXECUTE PROCEDURE verification_retours_beneficiaires_extras();
+
 CREATE TRIGGER log_u_i
 AFTER INSERT ON utilisateurs
 FOR EACH ROW EXECUTE PROCEDURE log_utilisateur_insert();

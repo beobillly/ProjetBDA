@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS beneficiaires (
     id_projet INT NOT NULL,
     role_projet VARCHAR(255) DEFAULT NULL,
     montant INT CHECK (montant > 0) DEFAULT 0,
+    pourcentage_extra INT CHECK (pourcentage_extra >= 0 AND pourcentage_extra <= 100) DEFAULT 0,
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
     FOREIGN KEY (id_projet) REFERENCES projets(id_projet)
 );
