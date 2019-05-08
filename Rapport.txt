@@ -1,0 +1,155 @@
+Etienne Juan-Gesta
+ébastien Lecleire
+Base de Données Avancées – Projet Sujet:
+Crowdfunding pour financement de groupe de musique
+
+Tables:
+
+    Table utilisateurs: 
+        Tous les utilisateurs ont un nom, un prénom, un age, une adresse, un mail, le niveau global (qui dépend du montant total donné), actif qui est un booléen qui indique si l’utilisateur est actif ou pas, la date d’inscription et date de dernière connexion.
+        Règle de gestion: 
+        -Clé primaire: id_utilisateur.
+        -Réglé par check: age > 18 ans
+        -Réglés par trigger: niveau global, actif, date_inscription,  date_dernière_co 
+        -Nullable: rien.
+
+    Table Projet:
+        Il a un id projet, un nom, un montant de base ( montant a atteindre), un montant maximum autorisé, le montant actuel atteint, une description, une date de création, une date limite, la date du dernier don, et un booléen pour savoir si le projet est encore actif.
+        Règles de gestion:
+        -Clé primaire: id_projet.
+        -Clé étrangère: id_initiateur.
+        Réglés par check: 
+        Création d’un projet, date limite > date de création, montant_actuel < montant_max, montant_base > 0 et montant_base < montant_max
+        -Réglés par trigger: date_dernière_donation, actif
+        -Nullable: date_dernier_don
+
+    Table Initiateur:
+        Un initiateur a un id initiateur, un id utilisateur et un id projet. Il a également une note de fiabilité et une description. 
+        Règles de gestion:
+        -Clé primaire: id_initiateur.
+        -Clé étrangère: id_utilisateur, id_projet.
+        -Réglés par fonction: fiabilité.
+        -Nullable: description, fiabilité
+
+    Table Donateur:
+        Un donateur a un id donateur, un id utilisateur et un id projet.  On a egalement un montant et un niveau.
+        Il s’agit en fait de son statut de donateur pour 1 projet donné. 
+        Il y a donc le montant total donné et son niveau de donateur pour ce projet.
+        Règles de gestion:
+        -Clé primaire: id_donateur.
+        -Clé étrangère: id_utilisateur, id_projet.
+        Réglé par trigger: niveau
+        -Nullable: rien
+
+    Table Bénéficiaire:
+        Un des bénéficiaires du projet. Il a un id bénéficiaire, un id utilisateur et un idprojet. 
+        On a son rôle dans le groupe, le montant qui est censée lui être reversé en pourcentage ainsi que le montant qui lui sera reversé.
+        Règles de gestion:
+        -Clé primaire: id_bénéficiaire.
+        -Clé étrangère: id_utilisateur, id_projet.
+        -Nullable: rôle.
+
+
+    Table log_utilisateur:
+        Il y a un id_log_u, une old_value, une new_value, une date_action, , une catégorie .
+        Règles de gestion:
+        -Clé primaire: id_log_u
+        -Réglés par trigger: tout
+        -Nullable: rien
+
+    Table log_projet :
+        Il y a un id_log_p, une old_value, une new_value, une date_action, , une catégorie .
+        Règles de gestion:
+        -Clé primaire: id_log_p
+        -Réglés par trigger: tout
+        -Nullable: rien
+
+Index :
+
+    Il y a 3 index : 
+
+        X_PROJ_DATE_CREALIM ON projets (date_creation, date_limite);
+        pour accelerer les recherches sur les projets qui prennent en parametre des dates et faire des stats
+
+        X_DONA_MONTNIV ON donateurs (montant, niveau);
+        pour accelerer les requetes portant sur le montant donné et le niveau d'un donateur, tres pratique pour faire des dons
+
+        X_UTI_MAIL ON utilisateurs (mail);
+        pour accelerer les checks des mails
+
+Triggers :
+
+    Chaque opération d'insertion, de suppression et de mise a jour quelle que soit la table est enregistrée dans les tables de log prévu à cet effet.
+    On a des triggers permettant la verification des payments fait au beneficiaire et sur les dons fait par un donateur à un projet.
+
+Fonctions :
+
+    -Fonctions permettant de créer un projet (en vérifiant toutes les contraintes d’un projet)
+    -Fonctions permettant d’arrêter un projet de force ou non si le montant de base est dépassé, ou en cas d’abandon du projet
+    -Fonctions permettant de créer une ligne dans une table (ex : un utilisateur, un projet, ...)
+    -Fonctions d’inviter un utilisateur a devenir bénéficiaire d’un projet
+    -Fonctions permettant a un utilisateur de donner de l’argent a un projet (faire un don)
+    -Fonctions permettant de récupérer des données, des logs, adéquates selon le statut de l’utilisateur (ex : moyenne des dons)
+    -Fonctions permettant dexecuter les triggers (valable pour tous les triggers car tous les triggers sont liés à une fonction)
+    -Fonctions de vérification lors de requetes sensibles (dons, payement, ajout d'un projet, ...)
+    -Fonctions permettant de tester le cycle de vie d'un projet 
+    -Fonctions permettant de tester les contraintes d'intégrité du projet (ex : age, montant, ...)
+    -Fonctions permettant d'éviter des opérations non autorisées (ex : dons avec montant négatif , ... )
+
+-----------------------------------------------------------------------------------------------------
+/*Etienne, mets a jour les tests que tu as mis en plus et enlève ceux que tu n'as pas fait*/
+-----------------------------------------------------------------------------------------------------
+
+Tests :
+    1/ Fonctionnement normal d'un projet : 
+       Un utilisateur créé un projet, d'autres utilisateurs font des dons, le montant de base est dépassé et l'utilisateur met fin au projet
+    
+    2/ Fonctionnement normal d'un projet avec petites restrictions:
+       Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
+       Il constate qu'il ne peut pas et attend que son premier projet se termine puis fini par créer son deuxieme projet.
+    
+    3/ Fonctionnement normal d'un projet avec petites restrictions bis:
+       Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
+       Il constate qu'il ne peut pas et n'attend pas que son premier projet se termine. Il force la suppression de son premier projet puis créé son 
+       deuxieme projet.
+
+    4/ Fonctionnement normal d'un projet avec limite de temps:
+       Un utilisateur créé un projet, il a quelques dons puis le projet tombe dans l'oubli.
+       Le projet est supprimé quand le temps limite est dépassé.
+    
+    5/ Fonctionnement normal d'un projet plusieurs donateurs:
+       Un utilisateur fait des dons à un projet, son rang augmente, le temps passe, son rang diminue, il fait des dons conséquents à 3 projets et son rang augmente beaucoup.
+
+    6/ Fonctionnement normal d'un projet avec petites restrictions:
+       Un utilisateur créé un compte puis tente d'en créer un deuxieme avec la meme adresse mail, il constate qu'il ne peut pas puis se supprime son premier compte.
+    
+    7/ Fonctionnement normal d'un projet avec petites restrictions:
+       Un utilisateur de moins de 18 ans tente de s'inscrire, cela ne marche pas, fin.
+
+    8-9/ Un utilisateur tente de créer un projet avec un solde(montant_base ou monatant max) negatif, cela ne marche pas.
+
+    10/ un utlisateur tente de creer un projet et tente un don plus haut      que le max du projet autorisé
+
+    11/ un utlisateur tente de faire un don negatif
+
+    12/ un utlisateur tente de creer un projet avec la date de limite         inférieur à la date courante
+
+    13/ un administrateur veut obtenir tous les projets créé en novembre
+
+    14/ un administrateur veut obtenir tous les utilisateurs dernierement connecté en novembre
+
+    15/ un administrateur veut obetnir les 10 meilleurs donnateurs
+
+    16/ un administrateur veut obtenir tous les donnateurs ayant donné plus de 10000€ (tout don confondu)
+
+    17/ un administrateur veut savoir le nombre de fois que les adresses mail contiennent la lettre 'e'
+
+    18/ un administrateur veut obtenir les 10 pires donateurs
+
+    19/ un beneficiaire veut savoir le nombre de batteur qui sont beneficiaires de son projet
+
+    20/ La platforme veut savoir cb elle a gagné depuis le debut
+
+-----------------------------------------------------------------------------------------------------
+/*Etienne, mets a jour les tests que tu as mis en plus et enlève ceux que tu n'as pas fait*/
+-----------------------------------------------------------------------------------------------------

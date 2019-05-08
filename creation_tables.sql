@@ -55,8 +55,8 @@ CREATE TABLE IF NOT EXISTS beneficiaires (
     id_utilisateur INT NOT NULL,
     id_projet INT NOT NULL,
     role_projet VARCHAR(255) DEFAULT NULL,
-    montant INT CHECK (montant > 0) DEFAULT 0,
-    pourcentage_extra INT CHECK (pourcentage_extra >= 0 AND pourcentage_extra <= 100) DEFAULT 0,
+    montant INT NOT NULL CHECK (montant > 0) DEFAULT 0,
+    pourcentage_extra INT NOT NULL CHECK (pourcentage_extra >= 0 AND pourcentage_extra <= 100) DEFAULT 0,
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
     FOREIGN KEY (id_projet) REFERENCES projets(id_projet)
 );
@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS donateurs (
     id_donateur serial PRIMARY KEY,
     id_utilisateur INT NOT NULL,
     id_projet INT NOT NULL,
-    montant INT DEFAULT 0,
-    niveau INT DEFAULT 1,
+    montant INT NOT NULL DEFAULT 0,
+    niveau INT NOT NULL DEFAULT 1,
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
     FOREIGN KEY (id_projet) REFERENCES projets(id_projet)
 );
@@ -94,26 +94,3 @@ CREATE TABLE IF NOT EXISTS log_projets (
 CREATE INDEX X_PROJ_DATE_CREALIM ON projets (date_creation, date_limite);
 CREATE INDEX X_DONA_MONTNIV ON donateurs (montant, niveau);
 CREATE INDEX X_UTI_MAIL ON utilisateurs (mail);
-
---Insertion dans les tables
-
-INSERT INTO utilisateurs (nom, prenom, age, adresse, mail, niveau_global, actif, date_inscription) 
-VALUES ('Platforme','Taxe',99, '2 rue du fric','filetonfric@gmail.com',1, true, CURRENT_TIMESTAMP);
-
-INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite, actif) 
-VALUES ('Duval',1000,25000,'mon super projet', CURRENT_TIMESTAMP, True);
-
-INSERT INTO initiateurs (id_utilisateur, id_projet, descr, fiabilite) 
-VALUES (1,1, 'coucou',5);
-
-INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) 
-VALUES (1,1, 'batteur',50);
-
-INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau) 
-VALUES (1,1, 0,5);
-
-INSERT INTO log_utilisateurs (new_value, date_action, categorie) 
-VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
-
-INSERT INTO log_projets (new_value, date_action, categorie) 
-VALUES ('CREATION dun log',CURRENT_TIMESTAMP,'CREATION');
