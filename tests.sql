@@ -1,204 +1,15 @@
-DROP FUNCTION IF EXISTS getUtilisateurs CASCADE;
-DROP FUNCTION IF EXISTS getUtilisateursAge CASCADE;
-DROP FUNCTION IF EXISTS moyenneDonateursMontant CASCADE;
-DROP FUNCTION IF EXISTS newUtilisateurs CASCADE;
-DROP FUNCTION IF EXISTS getBeneficiairesProjet CASCADE;
-DROP FUNCTION IF EXISTS totalDons CASCADE;
-DROP FUNCTION IF EXISTS don CASCADE;
-DROP FUNCTION IF EXISTS CreerInitiateur CASCADE;
-DROP FUNCTION IF EXISTS CreerInitiateurAvecDescr CASCADE;
-DROP FUNCTION IF EXISTS CreerProjet CASCADE;
-DROP FUNCTION IF EXISTS InitierProjet CASCADE;
-DROP FUNCTION IF EXISTS TerminerProjet CASCADE;
-DROP FUNCTION IF EXISTS TerminerProjetForce CASCADE;
+
 DROP FUNCTION IF EXISTS testProjectCreation CASCADE;
 DROP FUNCTION IF EXISTS testProjectLifeCycle CASCADE;
 DROP FUNCTION IF EXISTS testProjectLifeCycleNotEnoughMoney CASCADE;
 DROP FUNCTION IF EXISTS testProjectLifeCycleNotEnoughMoneyForceShutdown CASCADE;
-DROP FUNCTION IF EXISTS aDejaProjetActif CASCADE;
 DROP FUNCTION IF EXISTS montantNegatif CASCADE;
 DROP FUNCTION IF EXISTS testTropJeune CASCADE;
 DROP FUNCTION IF EXISTS testDonNegatif CASCADE;
 DROP FUNCTION IF EXISTS testTooMuchMoney CASCADE;
 DROP FUNCTION IF EXISTS testDateIncorrecte CASCADE;
+DROP FUNCTION IF EXISTS redistribute CASCADE;
 -- Partie fonctions
-
---fonction qui renvoie tous les utilisateurs 
-CREATE OR REPLACE FUNCTION getUtilisateurs() 
-RETURNS SETOF utilisateurs AS $$
-SELECT * FROM utilisateurs;
-$$ LANGUAGE SQL;
-
---fonction qui ajoute des utilisateurs dans la table utilisateurs
-CREATE OR REPLACE FUNCTION newUtilisateurs(unom utilisateurs.nom%TYPE, uprenom utilisateurs.prenom%TYPE, uage utilisateurs.age%TYPE, uadresse utilisateurs.adresse%TYPE, umail utilisateurs.mail%TYPE, univeau_global utilisateurs.niveau_global%TYPE, uactif utilisateurs.actif%TYPE, udate_inscription utilisateurs.date_inscription%TYPE) 
-RETURNS SETOF utilisateurs AS $$
-INSERT INTO utilisateurs (nom, prenom, age, adresse, mail, niveau_global, actif, date_inscription) 
-VALUES (unom, uprenom, uage, uadresse, umail, univeau_global, uactif, udate_inscription);
-SELECT getUtilisateurs();
-$$ LANGUAGE SQL;
-
---fonction qui renvoie tous les utilisateurs plus vieux que "vieux"
-CREATE OR REPLACE FUNCTION getUtilisateursAge(vieux int) 
-RETURNS SETOF utilisateurs AS $$ 
-SELECT * FROM utilisateurs WHERE age > vieux;
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION getBeneficiairesProjet(idProj projets.id_projet%TYPE) 
-RETURNS SETOF beneficiaires AS $$
-SELECT * FROM beneficiaires
-WHERE id_projet = idProj;
-$$ LANGUAGE SQL;
-
---fonction qui renvoie la moyenne des dons faites par un utlisateurs
-CREATE OR REPLACE FUNCTION moyenneDonateursMontant (uid donateurs.id_utilisateur%TYPE) 
-RETURNS DECIMAL(4,2) AS $$ 
-DECLARE 
-ligne RECORD;
-q donateurs.montant%TYPE := 0;
-i INTEGER := 0 ; 
-BEGIN 
-FOR ligne IN SELECT montant FROM donateurs WHERE id_donateur = uid 
-LOOP
-	q = q + ligne.montant; 
-	i := i + 1 ;
-END LOOP;
-IF i = 0 
-	THEN RETURN 0;
-END IF;
-RETURN (q :: DECIMAL / i) :: DECIMAL(4,2); 
-END;
-$$ LANGUAGE plpgsql;
-
---Fonction qui renvoie le montant total donné par un utilisateur
-CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE) 
-RETURNS INTEGER AS $$ 
-BEGIN
-RETURN (SELECT SUM (montant)
-		AS montant_total
-		FROM donateurs
-		WHERE donateurs.id_utilisateur = uid);
-END;
-$$ LANGUAGE plpgsql;
-
---Fonction qui renvoie le montant total donné par un utilisateur sur un projet
-CREATE OR REPLACE FUNCTION totalDons (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE) 
-RETURNS INTEGER AS $$ 
-BEGIN
-RETURN (SELECT SUM (montant)
-		AS montant_total 
-		FROM donateurs
-		WHERE (donateurs.id_utilisateur = uid) AND (donateurs.id_projet = projid));
-END;
-$$ LANGUAGE plpgsql;
-
---fonction qui fait un don
-CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
-RETURNS INTEGER AS $$
-
-BEGIN
-	
-	UPDATE projets
-	SET montant_actuel = donnation + montant_actuel
-	WHERE id_projet = projid;
-
-	UPDATE donateurs
-	SET montant = donnation + montant
-	WHERE uid = donateurs.id_utilisateur AND id_projet = projid;
-
-	PERFORM update_date_connexion(uid);
-	PERFORM update_date_dernier_don(projid); 
-	RETURN 1;
-END;
-$$ LANGUAGE plpgsql;
-
---fonction qui termine un projet 
-CREATE OR REPLACE FUNCTION TerminerProjet(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
-RETURNS BOOLEAN AS $$
-BEGIN
-	IF EXISTS (select * from initiateurs where initiateurs.id_utilisateur = uid and initiateurs.id_projet = pid)
-	THEN
-		IF(SELECT verification_montant_base(pid) = TRUE) OR (SELECT verification_date_limite_projet(pid) = TRUE)
-			THEN update projets
-		   		set actif=false
-		 		where id_projet = pid;
-				RETURN TRUE;
-			ELSE RAISE 'Le montant du projet n a pas encore atteint le but requis, utilisez TerminerProjetForce si vous êtes sur de vous';
-		END IF;
-	ELSE RAISE 'Identifiant de l initiateur non trouvé, TRANSACTION ANNULEE';
-	END IF;
-	RETURN FALSE;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION TerminerProjetForce(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
-RETURNS BOOLEAN AS $$
-BEGIN
-	IF EXISTS (select * from initiateurs where initiateurs.id_utilisateur = uid and initiateurs.id_projet = pid)
-	THEN
-		update projets
-		set actif=false
-		where id_projet = pid;
-		RETURN TRUE;
-	ELSE RAISE 'Identifiant de l initiateur non trouvé, TRANSACTION ANNULEE';
-	END IF;
-	RETURN FALSE;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION CreerInitiateur(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE)
-RETURNS INTEGER AS $$ 
-BEGIN
-	INSERT INTO initiateurs (id_utilisateur, id_projet)
-	VALUES(uid, pid);
-	RETURN 1;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION CreerInitiateurAvecDescr(uid utilisateurs.id_utilisateur%TYPE, pid projets.id_projet%TYPE, description VARCHAR(255))
-RETURNS INTEGER AS $$ 
-BEGIN
-	INSERT INTO initiateurs (id_utilisateur, id_projet, descr)
-	VALUES(uid, pid, description);
-	RETURN 1;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION aDejaProjetActif(uid initiateurs.id_utilisateur%TYPE)
-RETURNS BOOLEAN AS $$
-BEGIN
-	RETURN EXISTS(SELECT id_utilisateur FROM initiateurs, projets WHERE id_utilisateur = uid AND initiateurs.id_projet = projets.id_projet AND projets.actif = true);
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION CreerProjet(nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
-RETURNS INTEGER AS $$ 
---DECLARE
---ligne RECORD;
---i INTEGER :=0;
-BEGIN
-	INSERT INTO projets (nom, montant_base, montant_max, descr, date_limite)
-	VALUES(nomProjet, montantBase, montantMax, descriptionProjet, deadline);
-	RETURN 1;
-END;
-$$ LANGUAGE plpgsql;
-
---Fonction pour initier un projet
-CREATE OR REPLACE FUNCTION InitierProjet(uid utilisateurs.id_utilisateur%TYPE, nomProjet projets.nom%TYPE, montantBase projets.montant_base%TYPE, montantMax projets.montant_max%TYPE, descriptionProjet projets.descr%TYPE, deadline projets.date_limite%TYPE)
-RETURNS BOOLEAN AS $$
-DECLARE
-i INTEGER :=0;
-BEGIN
-	IF aDejaProjetActif(uid) THEN	
-		RAISE 'Vous avez deja un projet actif';
-		RETURN FALSE;
-	ELSE
-		PERFORM CreerProjet(nomProjet, montantBase, montantMax, descriptionProjet, deadline); 
-		i := (SELECT MAX(id_projet) FROM projets);
-		PERFORM CreerInitiateur(uid, i );
-		RETURN TRUE;
-	END IF;
-END;
-$$ LANGUAGE plpgsql;
 
 --Teste la creation d'un projet en entier
 CREATE OR REPLACE FUNCTION testProjectCreation()
@@ -206,7 +17,7 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'blu@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'blu@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'herb@gmail.com');
 	RETURN InitierProjet(i, 'mon nouveau groupe trop bien fait une tournee', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
 	
@@ -220,9 +31,9 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'k@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jjo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0jo@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
@@ -242,9 +53,9 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'koku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jiji@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'koku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- 	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jiji@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'jiji@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
@@ -264,9 +75,9 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisasdasdous' :: VARCHAR,'dsde':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kilo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jfasd' :: VARCHAR,'cocaso':: VARCHAR,56, '70 rue du plankton':: VARCHAR,'jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'codco':: VARCHAR,78, '2 rue du plankton':: VARCHAR,'jiko@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisasdasdous' :: VARCHAR,'dsde':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kilo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jfasd' :: VARCHAR,'cocaso':: VARCHAR,56, '70 rue du plankton':: VARCHAR,'jo@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- 	PERFORM newUtilisateurs('jf' :: VARCHAR,'codco':: VARCHAR,78, '2 rue du plankton':: VARCHAR,'jiko@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'jiko@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
@@ -286,9 +97,9 @@ RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kula@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajou@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0j9@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kula@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajou@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'j0j9@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'j0j9@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
@@ -304,14 +115,14 @@ Fonctionnement normal d'un projet avec petites restrictions:
        Un utilisateur créé un projet, il a quelques dons puis décide de créer un autre projet avant que son premier projet soit fini.
        Il constate qu'il ne peut pas et attend que son premier projet se termine puis fini par créer son deuxieme projet.
 */
-CREATE OR REPLACE FUNCTION testBehaviour1()
+CREATE OR REPLACE FUNCTION testBehaviour()
 RETURNS BOOLEAN as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kudla@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajouju@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'kokiku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kudla@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jajouju@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- 	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'kokiku@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'kokiku@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
@@ -360,7 +171,7 @@ RETURNS INTEGER AS $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'kakoko@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	--PERFORM newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'kakoko@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'kakoko@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
 	PERFORM don(i, (SELECT MAX(id_projet) from projets), -500);
@@ -374,9 +185,9 @@ RETURNS INTEGER as $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisasdasdous' :: VARCHAR,'dsde':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kiloka@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-	PERFORM newUtilisateurs('jfasd' :: VARCHAR,'cocaso':: VARCHAR,56, '70 rue du plankton':: VARCHAR,'joka@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
-		PERFORM newUtilisateurs('jf' :: VARCHAR,'codco':: VARCHAR,78, '2 rue du plankton':: VARCHAR,'jikoka@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisasdasdous' :: VARCHAR,'dsde':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kiloka@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('jfasd' :: VARCHAR,'cocaso':: VARCHAR,56, '70 rue du plankton':: VARCHAR,'joka@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- 	PERFORM newUtilisateurs('jf' :: VARCHAR,'codco':: VARCHAR,78, '2 rue du plankton':: VARCHAR,'jikoka@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'jikoka@gmail.com');
 	PERFORM InitierProjet(i, 'mon disque', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2020/07/09', 'yyyy/mm/dd') :: DATE);
@@ -392,7 +203,7 @@ RETURNS BOOLEAN AS $$
 DECLARE
 i INTEGER := 0;
 BEGIN
-	PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'bludabedibaduba@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
+	-- PERFORM newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'bludabedibaduba@gmail.com':: VARCHAR,1, FALSE, CURRENT_TIMESTAMP :: DATE);
 	i = (SELECT id_utilisateur FROM utilisateurs WHERE utilisateurs.mail = 'bludabedibaduba@gmail.com');
 	RETURN InitierProjet(i, 'mon nouveau groupe trop bien fait une tournee', 6000, 10000, 'on va seclater ouaiiiis', TO_DATE('2015/07/09', 'yyyy/mm/dd') :: DATE);
 END;
@@ -474,9 +285,9 @@ SELECT testTooMuchMoney();
 SELECT testDateIncorrecte();
 
 --un administrateur veut obtenir les mails de tous les utilisateurs inscrits en novembre 2018
-SELECT newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kikiki@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/07/09', 'yyyy/mm/dd') :: DATE);
-SELECT newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jaaaajo@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/11/09', 'yyyy/mm/dd') :: DATE);	
-SELECT newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,32, '2 rue du sae':: VARCHAR,'bludabediba@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/11/09', 'yyyy/mm/dd') :: DATE);
+-- SELECT newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,25, '2 rue du sae':: VARCHAR,'kikiki@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/07/09', 'yyyy/mm/dd') :: DATE);
+-- SELECT newUtilisateurs('jf' :: VARCHAR,'coco':: VARCHAR,56, '2 rue du plankton':: VARCHAR,'jaaaajo@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/11/09', 'yyyy/mm/dd') :: DATE);	
+-- SELECT newUtilisateurs('Bisous' :: VARCHAR,'e':: VARCHAR,32, '2 rue du sae':: VARCHAR,'bludabediba@gmail.com':: VARCHAR,1, FALSE, TO_DATE('2018/11/09', 'yyyy/mm/dd') :: DATE);
 SELECT mail FROM utilisateurs WHERE (date_inscription > TO_DATE('2018/10/31', 'yyyy/mm/dd') :: DATE) AND (date_inscription < TO_DATE('2018/12/01', 'yyyy/mm/dd') :: DATE);
 
 --un administrateur veut obtenir les projets crées en novembre 2018
@@ -489,3 +300,19 @@ SELECT moyenneDonateursMontant(1);
 SELECT totalDons(1);
 SELECT totalDons(1,1);
 SELECT don (1, 1, 75);
+
+
+CREATE OR REPLACE FUNCTION redistribute  (projid projets.id_projet%TYPE) 
+RETURNS INTEGER AS $$ 
+DECLARE 
+ligne RECORD;
+BEGIN 
+FOR ligne IN SELECT * FROM beneficiaires WHERE beneficiaires.id_projet = projid
+LOOP
+	UPDATE beneficiaires
+	SET montant = ((SELECT montant_actuel FROM projets WHERE id_projet = projid)*(ligne.pourcentage_extra))/100 
+	WHERE id_beneficiaire = ligne.id_beneficiaire;
+END LOOP;
+RETURN 1; 
+END;
+$$ LANGUAGE plpgsql;

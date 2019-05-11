@@ -87,8 +87,10 @@ Fonctions :
     -Fonctions permettant de créer un projet (en vérifiant toutes les contraintes d’un projet)
     -Fonctions permettant d’arrêter un projet de force ou non si le montant de base est dépassé, ou en cas d’abandon du projet
     -Fonctions permettant de créer une ligne dans une table (ex : un utilisateur, un projet, ...)
-    -Fonctions d’inviter un utilisateur a devenir bénéficiaire d’un projet
+    -Fonctions permettan d’inviter un utilisateur a devenir bénéficiaire d’un projet
     -Fonctions permettant a un utilisateur de donner de l’argent a un projet (faire un don)
+    -Fonction permettant de redistribuer l’argent selon le pourcentage
+    -Fonction permettant de faire passer de niveau selon le montant donné
     -Fonctions permettant de récupérer des données, des logs, adéquates selon le statut de l’utilisateur (ex : moyenne des dons)
     -Fonctions permettant dexecuter les triggers (valable pour tous les triggers car tous les triggers sont liés à une fonction)
     -Fonctions de vérification lors de requetes sensibles (dons, payement, ajout d'un projet, ...)
@@ -136,9 +138,6 @@ Tests :
 
     13/ un administrateur veut obtenir tous les projets créé en novembre
 
-    14/ un administrateur veut obtenir tous les utilisateurs dernierement connecté en novembre
-
-    15/ un administrateur veut obetnir les 10 meilleurs donnateurs
 
     16/ un administrateur veut obtenir tous les donnateurs ayant donné plus de 10000€ (tout don confondu)
 

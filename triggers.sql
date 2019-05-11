@@ -15,6 +15,7 @@ DROP FUNCTION IF EXISTS verification_montant_base CASCADE;
 DROP FUNCTION IF EXISTS verification_date_limite_projet CASCADE;
 DROP FUNCTION IF EXISTS verification_retours_beneficiaires CASCADE;
 DROP FUNCTION IF EXISTS verification_retours_beneficiaires_extras CASCADE;
+DROP FUNCTION IF EXISTS update_level CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -30,6 +31,28 @@ BEGIN
 UPDATE utilisateurs SET date_derniere_connexion = current_timestamp
 WHERE id_utilisateur = uid_utilisateur;
 RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION update_level() 
+RETURNS trigger AS $$ 
+BEGIN
+	IF ((NEW.montant) > 1000)
+	THEN
+		UPDATE donateurs SET niveau = 2
+		WHERE id_donateur = NEW.id_donateur;
+	END IF;
+	IF ((NEW.montant) > 5000)
+	THEN
+  		UPDATE donateurs SET niveau = 3
+		WHERE id_donateur = NEW.id_donateur;
+	END IF;
+	IF ((NEW.montant) > 20000)
+	THEN
+  		UPDATE donateurs SET niveau = 4
+		WHERE id_donateur = NEW.id_donateur;
+	END IF;
+RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -108,21 +131,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 --insert 
+
 CREATE FUNCTION log_projet_insert() RETURNS trigger AS $$ 
 BEGIN
 INSERT INTO log_projets (new_value, date_action, categorie) VALUES (NEW, current_timestamp, 'INSERT');
-INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) VALUES (1, NEW.id_projet, 'Taxe platforme', 5*NEW.montant_base/100);
-INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant) 
-VALUES (1,1, 'batteur',50);
+INSERT INTO beneficiaires (id_utilisateur, id_projet, role_projet, montant, pourcentage_extra) VALUES (1, NEW.id_projet, 'Taxe platforme', 0, 5);
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+
 --Vérifie si total montant de retour pour les beneficiaires est inférieur au montant de base du projet
+/*
 CREATE FUNCTION verification_retours_beneficiaires() 
 RETURNS trigger AS $$
 BEGIN
-IF (SELECT SUM(beneficiaires.montant) from beneficiares where beneficiaires.id_projet = NEW.id_projet) <= (SELECT montant_base FROM projets WHERE id_projet = NEW.id_projet)
+IF (SELECT SUM(beneficiaires.montant) from beneficiaires where beneficiaires.id_projet = NEW.id_projet) <= (SELECT montant_base FROM projets WHERE id_projet = NEW.id_projet)
 THEN
 RAISE EXCEPTION 'Le total des retour pour les béneficiaires dépasse le montant de base';
 RETURN OLD;
@@ -130,12 +154,13 @@ END IF;
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+*/
 
---Vérifie si poucentage total de retour pour les beneficiaires est inférieur a 100%.
+--Vérifie si pourcentage total de retour pour les beneficiaires est inférieur a 100%.
 CREATE FUNCTION verification_retours_beneficiaires_extras() 
 RETURNS trigger AS $$
 BEGIN
-IF (SELECT SUM(beneficiaires.pourcentage_extra) from beneficiares where beneficiaires.id_projet = NEW.id_projet) <= 100
+IF (SELECT SUM(beneficiaires.pourcentage_extra) from beneficiaires where beneficiaires.id_projet = NEW.id_projet) >= 100
 THEN
 RAISE EXCEPTION 'Le total des pourcentages des extras dépasse 100';
 RETURN OLD;
@@ -175,7 +200,7 @@ BEGIN
 IF (NEW.montant_actuel >= OLD.montant_max) OR (OLD.actif = FALSE)
 THEN RAISE EXCEPTION 'Le montant de votre don dépasse le montant maximal autorisé par ce projet, le projet n est plus disponible à la modification';
 END IF;
-IF (NEW.montant_actuel <= OLD.montant_actuel) OR (NEW.montant_actuel < 0)
+IF (/*NEW.montant_actuel <= OLD.montant_actuel) OR */(NEW.montant_actuel < 0))
 THEN RAISE EXCEPTION 'Le montant de votre don ne doit pas etre negatif ou nul';
 END IF;
 RETURN NEW;
@@ -213,8 +238,13 @@ CREATE TRIGGER verif_r_b
 AFTER UPDATE ON beneficiaires
 FOR EACH ROW EXECUTE PROCEDURE verification_retours_beneficiaires();
 
+
+CREATE TRIGGER verif_u_l
+AFTER INSERT, UPDATE ON donateurs
+FOR EACH ROW EXECUTE PROCEDURE update_level();
+
 CREATE TRIGGER verif_r_b_e
-AFTER UPDATE ON beneficiaires
+AFTER INSERT ON beneficiaires
 FOR EACH ROW EXECUTE PROCEDURE verification_retours_beneficiaires_extras();
 
 CREATE TRIGGER log_u_i

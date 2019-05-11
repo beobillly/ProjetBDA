@@ -34,7 +34,11 @@ Faire marcher le projet :
 
     \i creation_tables.sql
     \i triggers.sql
+    \i functions.sql (fonctions utiles)
+    \i insert_datas.sql (peupler la table)
+
     \i tests.sql (batterie de tests)
+OU  \i testX.sql avec x de 1 a 12
 
 Le fichier rapport contient : 
 

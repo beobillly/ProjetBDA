@@ -1,12 +1,14 @@
-DROP FUNCTION IF EXISTS testTropJeune CASCADE;
+DROP FUNCTION IF EXISTS pourcentageDepasse CASCADE;
 
---un utilisateur de moins de 18 ans tente de s'inscrire, cela ne marche pas, fin.
-CREATE OR REPLACE FUNCTION testTropJeune () 
+--un utilisateur ajoute des beneficiaires pour plus de 100% de reversement
+CREATE OR REPLACE FUNCTION pourcentageDepasse () 
 RETURNS INTEGER AS $$ 
 BEGIN
-	PERFORM newUtilisateurs('Henri' :: VARCHAR,'Jp':: VARCHAR,12, '2 rue imo':: VARCHAR,'roro@gmail.com':: VARCHAR,1, TRUE, CURRENT_TIMESTAMP :: DATE);
+	PERFORM newBeneficiaire(1, 1, 60);
+	PERFORM newBeneficiaire(2, 1, 60);
 	RETURN 1;
+
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT testTropJeune ();
+SELECT pourcentageDepasse();

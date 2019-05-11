@@ -1,6 +1,6 @@
 Fonctions :
 
-    Tout ce qui a attrait à la vie d'un projet
+    Tout ce qui a trait à la vie d'un projet
 
 Triggers :
 
