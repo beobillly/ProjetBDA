@@ -15,7 +15,6 @@ DROP FUNCTION IF EXISTS verification_montant_base CASCADE;
 DROP FUNCTION IF EXISTS verification_date_limite_projet CASCADE;
 DROP FUNCTION IF EXISTS verification_retours_beneficiaires CASCADE;
 DROP FUNCTION IF EXISTS verification_retours_beneficiaires_extras CASCADE;
-DROP FUNCTION IF EXISTS update_level CASCADE;
 
 DROP FUNCTION IF EXISTS log_projet_update CASCADE;
 DROP FUNCTION IF EXISTS log_projet_insert CASCADE;
@@ -34,27 +33,24 @@ RETURN 1;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION update_level() 
-RETURNS trigger AS $$ 
-BEGIN
-	IF ((NEW.montant) > 1000)
-	THEN
-		UPDATE donateurs SET niveau = 2
-		WHERE id_donateur = NEW.id_donateur;
-	END IF;
-	IF ((NEW.montant) > 5000)
-	THEN
-  		UPDATE donateurs SET niveau = 3
-		WHERE id_donateur = NEW.id_donateur;
-	END IF;
-	IF ((NEW.montant) > 20000)
-	THEN
-  		UPDATE donateurs SET niveau = 4
-		WHERE id_donateur = NEW.id_donateur;
-	END IF;
-RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
+-- CREATE FUNCTION update_level() 
+-- RETURNS trigger AS $$ 
+-- BEGIN
+-- 	IF ((NEW.montant) > 1000)
+-- 	THEN
+-- 		NEW.niveau = 2;
+-- 	END IF;
+-- 	IF ((NEW.montant) > 5000)
+-- 	THEN
+--   		NEW.niveau = 3;
+-- 	END IF;
+-- 	IF ((NEW.montant) > 20000)
+-- 	THEN
+--   		NEW.niveau = 4;
+-- 	END IF;
+-- RETURN NULL;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
 CREATE FUNCTION update_date_dernier_don(uid_projet projets.id_projet%TYPE) 
 RETURNS INTEGER AS $$
@@ -239,9 +235,9 @@ AFTER UPDATE ON beneficiaires
 FOR EACH ROW EXECUTE PROCEDURE verification_retours_beneficiaires();
 
 
-CREATE TRIGGER verif_u_l
-AFTER INSERT, UPDATE ON donateurs
-FOR EACH ROW EXECUTE PROCEDURE update_level();
+-- CREATE TRIGGER verif_u_l
+-- AFTER UPDATE ON donateurs
+-- FOR EACH ROW EXECUTE PROCEDURE update_level();
 
 CREATE TRIGGER verif_r_b_e
 AFTER INSERT ON beneficiaires

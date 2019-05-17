@@ -89,21 +89,48 @@ $$ LANGUAGE plpgsql;
 --fonction qui fait un don
 CREATE OR REPLACE FUNCTION don (uid donateurs.id_utilisateur%TYPE, projid donateurs.id_projet%TYPE, donnation INTEGER)
 RETURNS INTEGER AS $$
-
+DECLARE
+mont INTEGER :=0;
 BEGIN
 	IF (donnation <= 0) THEN 
 		RAISE 'Le montant a donner n est pas valide (egal ou inferieur a 0)';
 	END IF;
 	
+
 	IF EXISTS (SELECT * FROM donateurs WHERE donateurs.id_utilisateur = uid AND donateurs.id_projet = projid)
 	THEN
 		UPDATE donateurs
 		SET montant = donnation + montant
-		WHERE uid = donateurs.id_utilisateur AND id_projet = projid;
+		WHERE id_utilisateur = uid AND id_projet = projid;
+
+		mont = (SELECT montant FROM donateurs WHERE donateurs.id_utilisateur = uid);
 	ELSE
 		INSERT INTO donateurs (id_utilisateur, id_projet, montant, niveau)
 		VALUES(uid, projid, donnation, 1);
+		mont = donnation;
 	END IF;
+
+	IF (mont < 1000 AND mont >0)
+	THEN
+		UPDATE donateurs
+		SET niveau = 1
+		WHERE id_utilisateur = uid  AND id_projet = projid;
+	ELSEIF (mont >= 1000 AND mont < 5000)
+	THEN
+		UPDATE donateurs
+		SET niveau = 2
+		WHERE id_utilisateur = uid  AND id_projet = projid;
+	ELSEIF (mont >= 5000 AND mont < 20000)
+	THEN
+  		UPDATE donateurs
+		SET niveau = 3
+		WHERE id_utilisateur = uid  AND id_projet = projid;	
+	ELSE
+  		UPDATE donateurs
+		SET niveau = 4
+		WHERE id_utilisateur = uid  AND id_projet = projid;	
+	END IF;
+
 	UPDATE projets
 	SET montant_actuel = donnation + montant_actuel
 	WHERE id_projet = projid;
